@@ -12,9 +12,6 @@ on:
         required: false
         default: ''
 
-env:
-  IMAGE_NAME: "${{ github.event.repository.name }}"
-
 jobs:
   build:
     name: Build and push image
@@ -24,6 +21,7 @@ jobs:
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
     outputs:
       image_tag: ${{ steps.set-tag.outputs.image_tag }}
+      image_name: ${{ steps.set-name.outputs.image_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +31,13 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      # ✅ FIX : convertir le nom du repo en minuscules
+      - name: Set image name (lowercase)
+        id: set-name
+        run: |
+          image_name=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "image_name=${image_name}" >> $GITHUB_OUTPUT
 
       - name: Determine environment (test vs production)
         id: determine-env
@@ -68,7 +73,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.set-tag.outputs.image_tag }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.set-name.outputs.image_name }}:${{ steps.set-tag.outputs.image_tag }}
 
   deploy:
     name: Deploy to Azure VM
@@ -80,6 +85,8 @@ jobs:
       AZURE_USERNAME: ${{ secrets.AZURE_USERNAME }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      IMAGE_NAME: ${{ needs.build.outputs.image_name }}
+      IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -123,10 +130,10 @@ jobs:
             DOCKERHUB_USERNAME='${{ env.DOCKERHUB_USERNAME }}' \
             DOCKERHUB_PASSWORD='${{ env.DOCKERHUB_PASSWORD }}' \
             IMAGE_NAME='${{ env.IMAGE_NAME }}' \
-            IMAGE_TAG='${{ needs.build.outputs.image_tag }}' \
+            IMAGE_TAG='${{ env.IMAGE_TAG }}' \
             ENVIRONMENT='${{ steps.determine-deploy-env.outputs.env }}' \
             ./remote-deploy.sh"
 
       - name: Notify
         run: |
-          echo "Deployed ${{ steps.determine-deploy-env.outputs.env }} - image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}"
+          echo "✅ Deployed ${{ steps.determine-deploy-env.outputs.env }} — image: ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
