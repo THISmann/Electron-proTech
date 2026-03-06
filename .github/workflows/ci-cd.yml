@@ -68,10 +68,30 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      # FIX: auto-detect Dockerfile location
+      - name: Find Dockerfile
+        id: find-dockerfile
+        run: |
+          if [ -f "Dockerfile" ]; then
+            echo "path=." >> $GITHUB_OUTPUT
+            echo "file=Dockerfile" >> $GITHUB_OUTPUT
+          elif [ -f "docker/Dockerfile" ]; then
+            echo "path=." >> $GITHUB_OUTPUT
+            echo "file=docker/Dockerfile" >> $GITHUB_OUTPUT
+          else
+            dockerfile=$(find . -name "Dockerfile" | head -n 1)
+            if [ -z "$dockerfile" ]; then
+              echo "No Dockerfile found in project" && exit 1
+            fi
+            echo "path=$(dirname $dockerfile)" >> $GITHUB_OUTPUT
+            echo "file=$dockerfile" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ${{ steps.find-dockerfile.outputs.path }}
+          file: ${{ steps.find-dockerfile.outputs.file }}
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.set-name.outputs.image_name }}:${{ steps.set-tag.outputs.image_tag }}
 
