@@ -1,0 +1,44 @@
+{
+  "content": [
+    {
+      "id": "form-lead-section",
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "padding": { "unit": "px", "top": "40", "right": "24", "bottom": "40", "left": "24" }
+      },
+      "elements": [
+        {
+          "id": "form-lead-column",
+          "elType": "column",
+          "settings": { "_column_size": 100 },
+          "elements": [
+            {
+              "id": "form-lead-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Demande d'audit ou de devis",
+                "header_size": "h2",
+                "align": "center",
+                "title_color": "#005B96"
+              }
+            },
+            {
+              "id": "form-lead-shortcode",
+              "elType": "widget",
+              "widgetType": "shortcode",
+              "settings": {
+                "shortcode": "[contact-form-7 id=\"1\" title=\"Demande audit / devis\"]"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "title": "Formulaire lead proTech (inline)",
+    "type": "section"
+  }
+}

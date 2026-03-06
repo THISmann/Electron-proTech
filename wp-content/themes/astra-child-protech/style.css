@@ -1,0 +1,290 @@
+/*
+ Theme Name:   Astra Child Electron ProTech
+ Theme URI:    https://votre-domaine.com
+ Description:  Thème enfant Astra pour Electron ProTech – installations solaires, Cameroun. Palette logo (vert, bleu, jaune), mobile-first.
+ Author:       Electron ProTech
+ Author URI:   https://votre-domaine.com
+ Template:     astra
+ Version:      1.1.0
+ License:      GNU General Public License v2 or later
+ License URI:  http://www.gnu.org/licenses/gpl-2.0.html
+ Text Domain:  astra-child-protech
+*/
+
+/* ==========================================================================
+   Variables – palette Electron ProTech (logo: feuille, éclair, électrons)
+   ========================================================================== */
+:root {
+	/* Verts – nature, croissance, durabilité */
+	--ept-green-bright: #8BC34A;
+	--ept-green-medium: #4CAF50;
+	--ept-green-dark: #2E7D32;
+	/* Bleus – énergie, innovation, électrons */
+	--ept-blue-light: #03A9F4;
+	--ept-blue-medium: #2196F3;
+	--ept-blue-dark: #1565C0;
+	/* Jaune / or – éclair, énergie */
+	--ept-yellow: #FFEB3B;
+	--ept-gold: #FFC107;
+	/* Neutres */
+	--ept-black: #111111;
+	--ept-gray-dark: #37474F;
+	--ept-gray-mid: #78909C;
+	--ept-gray-light: #ECEFF1;
+	--ept-white: #FFFFFF;
+	/* Typo & effets */
+	--ept-font-primary: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+	--ept-radius: 8px;
+	--ept-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+	--ept-shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.12);
+	--ept-transition: 0.25s ease;
+}
+
+/* ==========================================================================
+   Base & typography
+   ========================================================================== */
+body.astra-child-protech {
+	font-family: var(--ept-font-primary);
+	color: var(--ept-gray-dark);
+	line-height: 1.6;
+}
+
+.astra-child-protech h1,
+.astra-child-protech h2,
+.astra-child-protech h3 {
+	color: var(--ept-green-dark);
+	font-weight: 700;
+}
+.astra-child-protech h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); }
+.astra-child-protech h2 { font-size: clamp(1.5rem, 3vw, 1.875rem); margin-top: 2rem; margin-bottom: 1rem; }
+.astra-child-protech h3 { font-size: 1.25rem; color: var(--ept-blue-dark); }
+
+.astra-child-protech a {
+	color: var(--ept-blue-medium);
+	transition: color var(--ept-transition);
+}
+.astra-child-protech a:hover {
+	color: var(--ept-green-dark);
+}
+
+/* ==========================================================================
+   CTA – jaune/or (éclair du logo), contraste fort
+   ========================================================================== */
+.cta-audit,
+.protech-cta-primary,
+.ept-cta-primary {
+	background: linear-gradient(135deg, var(--ept-gold) 0%, var(--ept-yellow) 100%) !important;
+	color: var(--ept-black) !important;
+	border: none;
+	border-radius: var(--ept-radius);
+	padding: 14px 28px;
+	font-weight: 700;
+	font-size: 1rem;
+	box-shadow: var(--ept-shadow);
+	transition: transform var(--ept-transition), box-shadow var(--ept-transition), opacity var(--ept-transition);
+}
+.cta-audit:hover,
+.protech-cta-primary:hover,
+.ept-cta-primary:hover {
+	opacity: 0.95;
+	transform: translateY(-2px);
+	box-shadow: var(--ept-shadow-hover);
+	color: var(--ept-black) !important;
+}
+
+/* CTA secondaire – bleu (électrons du logo) */
+.protech-cta-secondary,
+.ept-cta-secondary {
+	background-color: var(--ept-blue-medium);
+	color: var(--ept-white) !important;
+	border: none;
+	border-radius: var(--ept-radius);
+	padding: 14px 28px;
+	font-weight: 600;
+	transition: background-color var(--ept-transition), transform var(--ept-transition);
+}
+.protech-cta-secondary:hover,
+.ept-cta-secondary:hover {
+	background-color: var(--ept-blue-dark);
+	transform: translateY(-1px);
+	color: var(--ept-white) !important;
+}
+
+/* CTA tertiaire – vert (feuille) */
+.ept-cta-green {
+	background-color: var(--ept-green-medium);
+	color: var(--ept-white) !important;
+	border: none;
+	border-radius: var(--ept-radius);
+	padding: 12px 24px;
+	font-weight: 600;
+}
+.ept-cta-green:hover { background-color: var(--ept-green-dark); color: var(--ept-white) !important; }
+
+/* ==========================================================================
+   Blocs de contenu – cartes, sections
+   ========================================================================== */
+.astra-child-protech blockquote {
+	border-left: 4px solid var(--ept-green-medium);
+	background: var(--ept-gray-light);
+	padding: 1rem 1.25rem;
+	margin: 1.5rem 0;
+	border-radius: 0 var(--ept-radius) var(--ept-radius) 0;
+	font-style: italic;
+	color: var(--ept-gray-dark);
+}
+.astra-child-protech blockquote p:last-child { margin-bottom: 0; }
+
+.astra-child-protech ul,
+.astra-child-protech ol {
+	margin: 1rem 0;
+	padding-left: 1.5rem;
+}
+.astra-child-protech li { margin-bottom: 0.5rem; }
+.astra-child-protech li::marker { color: var(--ept-green-medium); }
+
+/* Bandeau / section sombre (type hero) */
+.ept-section-dark {
+	background-color: var(--ept-black);
+	color: var(--ept-white);
+	padding: 3rem 1.5rem;
+}
+.ept-section-dark h1,
+.ept-section-dark h2,
+.ept-section-dark h3 { color: var(--ept-white); }
+.ept-section-dark a { color: var(--ept-yellow); }
+.ept-section-dark a:hover { color: var(--ept-green-bright); }
+
+/* Section verte (nature, confiance) */
+.ept-section-green {
+	background: linear-gradient(180deg, var(--ept-green-dark) 0%, var(--ept-green-medium) 100%);
+	color: var(--ept-white);
+	padding: 2.5rem 1.5rem;
+}
+.ept-section-green h2,
+.ept-section-green h3 { color: var(--ept-white); }
+.ept-section-green .cta-audit,
+.ept-section-green .protech-cta-primary {
+	background: var(--ept-gold) !important;
+	color: var(--ept-black) !important;
+}
+
+/* ==========================================================================
+   Calculateur économies
+   ========================================================================== */
+.protech-calculateur {
+	max-width: 600px;
+	margin: 1.5rem auto;
+	padding: 1.75rem;
+	background: var(--ept-gray-light);
+	border-radius: var(--ept-radius);
+	border: 1px solid rgba(33, 150, 243, 0.2);
+	box-shadow: var(--ept-shadow);
+}
+.protech-calculateur .protech-calculateur-title,
+.protech-calculateur h3 {
+	color: var(--ept-green-dark);
+	margin-top: 0;
+}
+.protech-calculateur label {
+	display: block;
+	margin-bottom: 0.35rem;
+	font-weight: 600;
+	color: var(--ept-blue-dark);
+}
+.protech-calculateur input,
+.protech-calculateur select {
+	width: 100%;
+	padding: 12px 14px;
+	margin-bottom: 1rem;
+	border: 2px solid #CFD8DC;
+	border-radius: 6px;
+	font-size: 1rem;
+	transition: border-color var(--ept-transition);
+}
+.protech-calculateur input:focus,
+.protech-calculateur select:focus {
+	outline: none;
+	border-color: var(--ept-blue-medium);
+}
+.protech-calculateur .resultat {
+	margin-top: 1.5rem;
+	padding: 1.25rem;
+	background: var(--ept-white);
+	border-left: 4px solid var(--ept-green-medium);
+	border-radius: 4px;
+	font-weight: 600;
+	color: var(--ept-green-dark);
+	box-shadow: var(--ept-shadow);
+}
+
+/* ==========================================================================
+   Accessibilité & focus
+   ========================================================================== */
+.astra-child-protech a:focus-visible,
+.astra-child-protech button:focus-visible,
+.protech-calculateur input:focus-visible,
+.protech-calculateur select:focus-visible {
+	outline: 2px solid var(--ept-blue-medium);
+	outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Mobile-first
+   ========================================================================== */
+/* ==========================================================================
+   Header & navigation (Astra) – harmonisation palette
+   ========================================================================== */
+/* Header barre principale : bordure gérée dans vitrine.css (charte) */
+.astra-child-protech .main-navigation a,
+.astra-child-protech .main-header-menu a {
+	color: var(--ept-gray-dark);
+}
+.astra-child-protech .main-navigation a:hover,
+.astra-child-protech .main-header-menu a:hover {
+	color: var(--ept-green-dark);
+}
+.astra-child-protech .ast-button,
+.astra-child-protech .menu-toggle {
+	background-color: var(--ept-blue-medium);
+	color: var(--ept-white);
+	border-radius: var(--ept-radius);
+}
+.astra-child-protech .ast-button:hover,
+.astra-child-protech .menu-toggle:hover {
+	background-color: var(--ept-blue-dark);
+	color: var(--ept-white);
+}
+
+/* Footer */
+.astra-child-protech .site-footer {
+	border-top: 2px solid var(--ept-green-dark);
+	background-color: var(--ept-gray-light);
+}
+.astra-child-protech .site-footer a {
+	color: var(--ept-blue-dark);
+}
+.astra-child-protech .site-footer a:hover {
+	color: var(--ept-green-dark);
+}
+
+/* ==========================================================================
+   Mobile-first
+   ========================================================================== */
+@media (max-width: 768px) {
+	.cta-audit,
+	.protech-cta-primary,
+	.ept-cta-primary {
+		width: 100%;
+		text-align: center;
+		display: block;
+	}
+	.protech-calculateur {
+		margin: 1rem;
+		padding: 1.25rem;
+	}
+	.ept-section-dark,
+	.ept-section-green {
+		padding: 2rem 1rem;
+	}
+}

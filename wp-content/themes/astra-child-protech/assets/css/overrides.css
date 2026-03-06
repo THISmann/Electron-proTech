@@ -1,0 +1,261 @@
+/**
+ * Overrides Electron ProTech – chargé en dernier pour s'imposer sur Astra et Elementor.
+ * Spécificité élevée pour appliquer la palette du logo partout.
+ */
+
+/* Nav bar : forcer fond noir, liens blancs (éviter override blanc) */
+body.astra-child-protech .ept-nav-bar,
+body.astra-child-protech #page .ept-nav-bar,
+.ept-nav-bar {
+	background: #000 !important;
+}
+body.astra-child-protech .ept-nav-bar .main-header-menu > li > a,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap a,
+body.astra-child-protech .ept-nav-bar .main-header-menu a {
+	color: #fff !important;
+}
+body.astra-child-protech .ept-nav-bar .main-header-menu > li > a:hover,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap a:hover {
+	color: #FFEB3B !important;
+}
+body.astra-child-protech .ept-nav-bar .main-header-menu > li.ept-current-item > a,
+body.astra-child-protech .ept-nav-bar .main-header-menu > li.current-menu-item > a,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap .ept-current-item > a,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap .current-menu-item > a {
+	color: #4CAF50 !important;
+}
+
+/* Menu overlay (toutes tailles) : fond noir, liens blancs lisibles */
+.ept-nav-bar .ept-nav-menu-wrap,
+.ept-nav-bar.ept-nav-open .ept-nav-menu-wrap,
+.ept-nav-bar .ept-nav-menu-wrap#ept-nav-menu-dropdown {
+	background: #000 !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu,
+.ept-nav-bar .ept-nav-menu-wrap ul {
+	background: transparent !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu a,
+.ept-nav-bar .ept-nav-menu-wrap ul a {
+	color: #fff !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu a:hover,
+.ept-nav-bar .ept-nav-menu-wrap ul a:hover {
+	color: #FFEB3B !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .ept-current-item > a,
+.ept-nav-bar .ept-nav-menu-wrap .current-menu-item > a,
+.ept-nav-bar .ept-nav-menu-wrap a.ept-current-link {
+	color: #4CAF50 !important;
+}
+
+/* Masquer le titre de page (ex. "Accueil") au-dessus du contenu */
+body.astra-child-protech .entry-header,
+body.astra-child-protech .ast-singular .entry-header,
+body.astra-child-protech .ast-single-post .entry-header.ast-header-without-markup,
+body.astra-child-protech .site-content .entry-header {
+	display: none !important;
+}
+
+/* Carrousel collé au menu : marge blanche nulle entre header et hero – supprimer tout espace au-dessus du carousel */
+body.astra-child-protech #content:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech #content .ast-container:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech .site-content:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech .site-main:has(.ept-carousel-fullpage),
+body.astra-child-protech main:has(.ept-carousel-fullpage),
+body.astra-child-protech #primary:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech .entry-content:has(> .ept-carousel-fullpage:first-child),
+body.astra-child-protech .entry-content:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech .ast-container:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech article:has(> .entry-content > .ept-carousel-fullpage:first-child),
+body.astra-child-protech article:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+/* Secours page d'accueil : marge nulle entre header et hero (si :has() insuffisant) */
+body.astra-child-protech.ept-is-home #content,
+body.astra-child-protech.ept-is-home #content .ast-container,
+body.astra-child-protech.ept-is-home #primary,
+body.astra-child-protech.ept-is-home main#main,
+body.astra-child-protech.ept-is-home .site-main,
+body.astra-child-protech.ept-is-home article .entry-content {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+/* Cibles Astra supplémentaires : wrappers de contenu qui ajoutent du padding/margin en haut */
+body.astra-child-protech.ept-is-home .site-content,
+body.astra-child-protech .site-content:has(.ept-carousel-fullpage) {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech.ept-is-home .ast-article-post,
+body.astra-child-protech .ast-container .ast-article-post:first-child {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+body.astra-child-protech.ept-is-home .ast-builder-grid-row,
+body.astra-child-protech.ept-is-home .ast-builder-layout-element {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+
+/* Section Expertise : forcer grille 2 colonnes — contenu à côté de l'image, image à côté du contenu */
+body.astra-child-protech .ept-expertise-grid {
+	display: grid !important;
+	grid-template-columns: 1fr 1fr !important;
+	grid-template-rows: auto !important;
+	gap: 2rem 3rem !important;
+	align-items: start !important;
+}
+body.astra-child-protech .ept-expertise-grid > .ept-expertise-text {
+	grid-column: 1 !important;
+	grid-row: 1 !important;
+}
+body.astra-child-protech .ept-expertise-grid > .ept-expertise-img {
+	grid-column: 2 !important;
+	grid-row: 1 !important;
+}
+@media (max-width: 767px) {
+	body.astra-child-protech .ept-expertise-grid {
+		grid-template-columns: 1fr !important;
+	}
+	body.astra-child-protech .ept-expertise-grid > .ept-expertise-text { grid-column: 1 !important; grid-row: 2 !important; }
+	body.astra-child-protech .ept-expertise-grid > .ept-expertise-img { grid-column: 1 !important; grid-row: 1 !important; }
+}
+
+/* Nos services : textes limités à 3 lignes, cards compactes */
+.ept-service-card p {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* Menu actif : vert charte, priorité sur tout (Astra peut mettre du bleu sur .current-menu-item) */
+body.astra-child-protech .main-navigation .main-header-menu > li.ept-current-item > a,
+body.astra-child-protech .main-header-menu > li.ept-current-item > a,
+body.astra-child-protech .main-navigation a.ept-current-link,
+body.astra-child-protech .main-header-menu a.ept-current-link,
+body.astra-child-protech .main-navigation .main-header-menu > li.current-menu-item > a,
+body.astra-child-protech .main-header-menu > li.current-menu-item > a {
+	color: #2E7D32 !important;
+	font-weight: 600 !important;
+	background: rgba(76, 175, 80, 0.08) !important;
+	border-bottom-color: #2E7D32 !important;
+}
+/* Secours par body class (si JS désactivé) */
+body.astra-child-protech.ept-page-slug-realisations .main-header-menu a[href*="/realisations/"],
+body.astra-child-protech.ept-page-slug-realisations .main-navigation a[href*="/realisations/"],
+body.astra-child-protech.ept-page-slug-accueil .main-header-menu a[href*="/accueil/"],
+body.astra-child-protech.ept-page-slug-accueil .main-navigation a[href*="/accueil/"],
+body.astra-child-protech.ept-is-home .main-header-menu a[href*="/accueil/"],
+body.astra-child-protech.ept-is-home .main-navigation a[href*="/accueil/"],
+body.astra-child-protech.ept-is-home .main-header-menu a[href="/"],
+body.astra-child-protech.ept-is-home .main-navigation a[href="/"],
+body.astra-child-protech.ept-page-slug-blog .main-header-menu a[href*="/blog/"],
+body.astra-child-protech.ept-page-slug-blog .main-navigation a[href*="/blog/"],
+body.astra-child-protech.ept-page-slug-contact .main-header-menu a[href*="/contact/"],
+body.astra-child-protech.ept-page-slug-contact .main-navigation a[href*="/contact/"],
+body.astra-child-protech.ept-page-slug-a-propos .main-header-menu a[href*="/a-propos/"],
+body.astra-child-protech.ept-page-slug-a-propos .main-navigation a[href*="/a-propos/"],
+body.astra-child-protech.ept-page-slug-references-temoignages .main-header-menu a[href*="/references-temoignages/"],
+body.astra-child-protech.ept-page-slug-references-temoignages .main-navigation a[href*="/references-temoignages/"],
+body.astra-child-protech.ept-page-slug-simulateur .main-header-menu a[href*="/simulateur/"],
+body.astra-child-protech.ept-page-slug-simulateur .main-navigation a[href*="/simulateur/"] {
+	color: #2E7D32 !important;
+	font-weight: 600 !important;
+	background: rgba(76, 175, 80, 0.08) !important;
+	border-bottom-color: #2E7D32 !important;
+}
+
+/* CTA – or/jaune (éclair logo) – bat tout bouton orange */
+body.astra-child-protech a.cta-audit,
+body.astra-child-protech .entry-content a.cta-audit,
+body.astra-child-protech main a.cta-audit,
+body.astra-child-protech .site-content a.cta-audit,
+body.astra-child-protech a.protech-cta-primary,
+body.astra-child-protech .entry-content a.protech-cta-primary,
+body.astra-child-protech .ept-cta-primary,
+body.astra-child-protech .elementor-widget-button .elementor-button.elementor-size-md[href*="audit"],
+body.astra-child-protech .elementor-widget-button .elementor-button[href*="contact"] {
+	background: linear-gradient(135deg, #FFC107 0%, #FFEB3B 100%) !important;
+	color: #111111 !important;
+	border: none !important;
+	border-radius: 8px !important;
+	padding: 14px 28px !important;
+	font-weight: 700 !important;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
+	transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease !important;
+}
+body.astra-child-protech a.cta-audit:hover,
+body.astra-child-protech .entry-content a.cta-audit:hover,
+body.astra-child-protech main a.cta-audit:hover,
+body.astra-child-protech a.protech-cta-primary:hover,
+body.astra-child-protech .ept-cta-primary:hover,
+body.astra-child-protech .ept-contact-form button.cta-audit:hover {
+	opacity: 0.95 !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+	color: #111111 !important;
+}
+body.astra-child-protech .ept-contact-form button.cta-audit {
+	background: linear-gradient(135deg, #FFC107 0%, #FFEB3B 100%) !important;
+	color: #111111 !important;
+	border: none !important;
+	cursor: pointer !important;
+}
+
+/* Titres – vert foncé (feuille logo) */
+body.astra-child-protech .entry-content h1,
+body.astra-child-protech .entry-content h2,
+body.astra-child-protech main h1,
+body.astra-child-protech main h2,
+body.astra-child-protech .site-content h1,
+body.astra-child-protech .site-content h2 {
+	color: #2E7D32 !important;
+}
+body.astra-child-protech .entry-content h3,
+body.astra-child-protech main h3 {
+	color: #1565C0 !important;
+}
+
+/* Liens – bleu puis vert au survol */
+body.astra-child-protech .entry-content a:not(.cta-audit):not(.protech-cta-primary):not(.button),
+body.astra-child-protech main a:not(.cta-audit):not(.protech-cta-primary) {
+	color: #2196F3 !important;
+}
+body.astra-child-protech .entry-content a:not(.cta-audit):hover,
+body.astra-child-protech main a:not(.cta-audit):hover {
+	color: #2E7D32 !important;
+}
+
+/* Corps de texte – gris foncé */
+body.astra-child-protech .entry-content,
+body.astra-child-protech main .entry-content {
+	color: #37474F !important;
+}
+
+/* Blockquotes – bordure verte */
+body.astra-child-protech .entry-content blockquote,
+body.astra-child-protech main blockquote {
+	border-left-color: #4CAF50 !important;
+	background-color: #ECEFF1 !important;
+}

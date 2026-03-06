@@ -1,0 +1,1396 @@
+/**
+ * Design vitrine Electron ProTech – hero, cartes, sections, images
+ * Chargé avec le thème enfant
+ */
+
+/* ========== Hero pleine largeur avec image de fond ========== */
+.ept-hero {
+	position: relative;
+	min-height: 70vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 4rem 1.5rem;
+	margin: 0 calc(50% - 50vw) 3rem;
+	width: 100vw;
+	max-width: 100vw;
+	box-sizing: border-box;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+.ept-hero::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(135deg, rgba(17,17,17,0.85) 0%, rgba(46,125,50,0.75) 100%);
+	z-index: 0;
+}
+.ept-hero-inner {
+	position: relative;
+	z-index: 1;
+	max-width: 800px;
+}
+.ept-hero h1 {
+	color: #fff !important;
+	font-size: clamp(1.75rem, 4vw, 2.5rem) !important;
+	line-height: 1.2;
+	margin-bottom: 1rem;
+	text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.ept-hero .ept-hero-subtitle {
+	color: #03A9F4;
+	font-size: 1.125rem;
+	font-weight: 600;
+	margin-bottom: 1.5rem;
+}
+.ept-hero .cta-audit {
+	display: inline-block;
+	margin-top: 0.5rem;
+}
+
+/* Éviter scroll horizontal quand le carrousel est en full-bleed */
+body.astra-child-protech {
+	overflow-x: hidden;
+}
+
+/* Masquer la scrollbar du carousel produits (scroll horizontal) */
+.ept-products-scroll {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+.ept-products-scroll::-webkit-scrollbar {
+	display: none;
+}
+
+/* Carrousel hero full page : 100vw sans marge, texte en overlay sur l'image – collé sous le header */
+.ept-carousel-fullpage {
+	width: 100vw !important;
+	max-width: none !important;
+	margin-left: calc(-50vw + 50%) !important;
+	margin-right: calc(-50vw + 50%) !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+/* Marge nulle entre header et hero : tous les wrappers au-dessus du carousel */
+body.astra-child-protech .ast-container .entry-content > .ept-carousel-fullpage:first-child {
+	margin-top: 0 !important;
+}
+body.astra-child-protech .entry-content > .ept-carousel-fullpage:first-child {
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+}
+.ept-carousel-fullpage > div:first-child {
+	width: 500% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none;
+	overflow: hidden;
+}
+#hero-carousel-track,
+.ept-carousel-fullpage .flex {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+}
+.ept-carousel-fullpage [class*="flex-shrink-0"] {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+	overflow: hidden;
+}
+.ept-carousel-fullpage img {
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover !important;
+	display: block !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	vertical-align: bottom;
+}
+#hero-carousel-dots {
+	margin: 0;
+	padding: 0.5rem;
+	border: none;
+}
+@media (max-width: 768px) {
+	.ept-carousel-fullpage { min-height: 100vh; }
+	.ept-carousel-fullpage > div:first-child { min-height: 100vh; }
+}
+
+/* Hero slide 1 – style Raylyst (2 boutons, eyebrow, titre) */
+.ept-hero-eyebrow {
+	color: #F59E0B;
+	font-size: 0.875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 0.5rem;
+}
+.ept-hero-title {
+	color: #fff;
+	font-size: clamp(1.75rem, 4vw, 2.75rem);
+	font-weight: 700;
+	line-height: 1.15;
+	margin-bottom: 0.75rem;
+	text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+.ept-hero-desc {
+	color: rgba(255,255,255,0.95);
+	font-size: 1rem;
+	line-height: 1.5;
+	margin-bottom: 1.5rem;
+}
+.ept-hero-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+.ept-btn-hero {
+	display: inline-block;
+	padding: 0.75rem 1.5rem;
+	font-weight: 700;
+	border-radius: 6px;
+	transition: opacity 0.2s, transform 0.2s;
+}
+.ept-btn-hero-primary {
+	background: #F59E0B;
+	color: #111;
+}
+.ept-btn-hero-primary:hover { background: #FBBF24; color: #111; }
+.ept-btn-hero-secondary {
+	background: transparent;
+	color: #fff;
+	border: 2px solid #fff;
+}
+.ept-btn-hero-secondary:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+/* Sections style Raylyst : eyebrow + heading */
+.ept-raylyst-eyebrow {
+	text-align: center;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #2E7D32;
+	margin: 0 0 0.5rem 0;
+}
+.ept-raylyst-heading {
+	text-align: center;
+	font-size: clamp(1.35rem, 2.5vw, 1.75rem) !important;
+	font-weight: 700 !important;
+	color: #1a1a1a !important;
+	max-width: 720px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 1rem;
+	line-height: 1.3;
+}
+.ept-raylyst-intro {
+	text-align: center;
+	max-width: 560px;
+	margin: 0 auto 1.5rem;
+	font-size: 1rem;
+	color: #546E7A;
+	line-height: 1.6;
+}
+
+/* Partenaires & marques strip */
+.ept-raylyst-partners {
+	padding-top: 2.5rem;
+	padding-bottom: 2.5rem;
+}
+.ept-marques-strip {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem 1.5rem;
+	margin-top: 1.5rem;
+}
+.ept-marque {
+	display: inline-block;
+	padding: 0.5rem 1rem;
+	background: #ECEFF1;
+	border-radius: 8px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: #37474F;
+}
+
+/* Grille services (solaire, sécurité, embarqué, électricité, automatique) */
+.ept-services-three {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+.ept-service-card {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.75rem;
+	text-align: center;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+	text-decoration: none;
+	color: inherit;
+	border: 1px solid rgba(0,0,0,0.06);
+}
+.ept-service-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+	border-color: rgba(46,125,50,0.2);
+}
+.ept-service-card-icon {
+	font-size: 2rem;
+	margin-bottom: 0.75rem;
+}
+.ept-service-card h3 {
+	margin: 0 0 0.5rem 0 !important;
+	font-size: 1.125rem !important;
+	color: #1B5E20 !important;
+}
+.ept-service-card p {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: #546E7A;
+	line-height: 1.5;
+}
+@media (max-width: 768px) {
+	.ept-services-three { grid-template-columns: 1fr; }
+}
+
+/* Tout sous un toit */
+.ept-raylyst-under-one-roof {
+	text-align: center;
+}
+.ept-under-one-roof-text {
+	max-width: 640px;
+	margin: 0 auto 1.5rem;
+	font-size: 1.0625rem;
+	color: #37474F;
+	line-height: 1.6;
+}
+.ept-btn-cta-primary {
+	display: inline-block;
+	padding: 0.75rem 1.75rem;
+	background: #2E7D32;
+	color: #fff !important;
+	font-weight: 700;
+	border-radius: 8px;
+	transition: background 0.2s;
+}
+.ept-btn-cta-primary:hover { background: #1B5E20; color: #fff !important; }
+.ept-btn-cta-outline {
+	display: inline-block;
+	padding: 0.75rem 1.75rem;
+	border: 2px solid #2E7D32;
+	color: #2E7D32 !important;
+	font-weight: 700;
+	border-radius: 8px;
+	transition: background 0.2s, color 0.2s;
+}
+.ept-btn-cta-outline:hover { background: #2E7D32; color: #fff !important; }
+
+/* Pourquoi ProTech – 6 atouts (grille) */
+.ept-why-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+.ept-why-item {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.5rem;
+	text-align: center;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	border: 1px solid rgba(0,0,0,0.06);
+}
+.ept-why-icon {
+	width: 48px;
+	height: 48px;
+	margin: 0 auto 0.75rem;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.25rem;
+}
+.ept-why-item h3 {
+	margin: 0 0 0.35rem 0 !important;
+	font-size: 1rem !important;
+	color: #1B5E20 !important;
+}
+.ept-why-item p {
+	margin: 0;
+	font-size: 0.875rem;
+	color: #546E7A;
+	line-height: 1.5;
+}
+@media (max-width: 768px) {
+	.ept-why-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* CTA bandeau eyebrow */
+.ept-cta-eyebrow {
+	color: rgba(255,255,255,0.9) !important;
+	margin-bottom: 0.5rem;
+}
+.ept-cta-bandeau .ept-btn-cta-primary {
+	background: #FFC107 !important;
+	color: #111 !important;
+}
+.ept-cta-bandeau .ept-btn-cta-primary:hover {
+	background: #FFD54F !important;
+	color: #111 !important;
+}
+
+/* ========== Bandeau chiffres clés (style Raylyst) ========== */
+.ept-stats-bar {
+	background: #1B5E20;
+	color: #fff;
+	padding: 2rem 1.5rem;
+}
+.ept-stats-inner {
+	max-width: 1200px;
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 1.5rem;
+	text-align: center;
+}
+.ept-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+.ept-stat-value {
+	font-size: clamp(1.75rem, 4vw, 2.5rem);
+	font-weight: 800;
+	line-height: 1.1;
+	color: #fff;
+}
+.ept-stat-label {
+	font-size: 0.9375rem;
+	opacity: 0.9;
+}
+@media (max-width: 768px) {
+	.ept-stats-inner { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 1rem; }
+	.ept-stats-bar { padding: 1.5rem 1rem; }
+}
+
+/* ========== Sections aérées ========== */
+.ept-section {
+	padding: 3.5rem 1.5rem;
+	max-width: 1200px;
+	margin-left: auto;
+	margin-right: auto;
+}
+.ept-section-alt {
+	background: linear-gradient(180deg, #ECEFF1 0%, #fff 100%);
+	border-radius: 0 0 24px 24px;
+}
+.ept-section h2 {
+	text-align: center;
+	margin-bottom: 2rem;
+	font-size: clamp(1.5rem, 3vw, 2rem) !important;
+}
+
+/* ========== Grille de cartes (valeur, atouts) ========== */
+.ept-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+.ept-card {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.75rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+	border: 1px solid rgba(46,125,50,0.1);
+}
+.ept-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+.ept-card-icon {
+	width: 56px;
+	height: 56px;
+	border-radius: 12px;
+	background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 1rem;
+	font-size: 1.5rem;
+}
+.ept-card h3 {
+	margin: 0 0 0.5rem 0 !important;
+	font-size: 1.125rem !important;
+}
+.ept-card p {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: #37474F;
+	line-height: 1.6;
+}
+
+/* ========== Bloc image + texte (alterné) ========== */
+.ept-split {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 2.5rem;
+	align-items: center;
+	margin: 2.5rem 0;
+}
+@media (max-width: 768px) {
+	.ept-split { grid-template-columns: 1fr; }
+	.ept-split .ept-split-img { order: -1; }
+}
+.ept-split-img {
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+	max-width: 480px;
+	margin: 0 auto;
+}
+.ept-split-img img {
+	width: 100%;
+	height: auto;
+	max-height: 340px;
+	display: block;
+	object-fit: cover;
+	object-position: center;
+}
+@media (min-width: 769px) {
+	.ept-split .ept-split-img {
+		max-width: 100%;
+		margin: 0;
+	}
+	.ept-split-img img {
+		max-height: 400px;
+	}
+}
+.ept-split-content h2 { text-align: left; margin-bottom: 1rem; }
+.ept-split-content ul { margin: 1rem 0; }
+
+/* ========== Section Expertise : contenu à côté de l'image, image à côté du contenu ========== */
+.entry-content .ept-expertise-grid,
+.ept-expertise-section .ept-expertise-grid {
+	display: grid !important;
+	grid-template-columns: 1fr 1fr !important;
+	grid-template-rows: auto !important;
+	gap: 2rem 3rem !important;
+	align-items: start !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	width: 100% !important;
+}
+.entry-content .ept-expertise-text,
+.ept-expertise-section .ept-expertise-text {
+	grid-column: 1 !important;
+	grid-row: 1 !important;
+	order: 1;
+	min-width: 0;
+	max-width: 100%;
+}
+.entry-content .ept-expertise-img,
+.ept-expertise-section .ept-expertise-img {
+	grid-column: 2 !important;
+	grid-row: 1 !important;
+	order: 2;
+	border-radius: 1rem;
+	overflow: hidden;
+	box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+	min-width: 0;
+	max-width: 420px;
+	align-self: center;
+}
+.ept-expertise-section .ept-expertise-img img {
+	width: 100%;
+	height: auto;
+	display: block;
+	vertical-align: bottom;
+}
+@media (max-width: 767px) {
+	.entry-content .ept-expertise-grid,
+	.ept-expertise-section .ept-expertise-grid {
+		grid-template-columns: 1fr !important;
+		grid-template-rows: auto auto !important;
+		gap: 1.5rem !important;
+	}
+	.entry-content .ept-expertise-text,
+	.ept-expertise-section .ept-expertise-text {
+		grid-column: 1 !important;
+		grid-row: 2 !important;
+	}
+	.entry-content .ept-expertise-img,
+	.ept-expertise-section .ept-expertise-img {
+		grid-column: 1 !important;
+		grid-row: 1 !important;
+	}
+}
+
+/* ========== Réalisations en cartes ========== */
+.ept-realisations-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+.ept-realo-card {
+	background: #fff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.ept-realo-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+.ept-realo-card img {
+	width: 100%;
+	height: 180px;
+	object-fit: cover;
+}
+.ept-realo-card-body { padding: 1.25rem; }
+.ept-realo-card-body h3 { margin: 0 0 0.5rem 0 !important; font-size: 1.125rem !important; }
+.ept-realo-card-body p { margin: 0; font-size: 0.875rem; color: #78909C; }
+
+/* ========== Section Produits (accueil, style Raylyst) ========== */
+.ept-products-section {
+	background: linear-gradient(180deg, #fff 0%, #F5F5F5 100%);
+}
+.ept-products-intro {
+	text-align: center;
+	max-width: 640px;
+	margin: 0 auto 1rem;
+	font-size: 1.0625rem;
+	color: #546E7A;
+	line-height: 1.6;
+}
+.ept-products-section .ept-raylyst-heading {
+	margin-bottom: 1.5rem;
+}
+.ept-products-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+.ept-product-card {
+	display: block;
+	background: #fff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+	border: 1px solid rgba(0,0,0,0.06);
+	text-decoration: none;
+	color: inherit;
+}
+.ept-product-card:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+	border-color: rgba(46,125,50,0.25);
+}
+.ept-product-card-img {
+	aspect-ratio: 4/3;
+	overflow: hidden;
+	background: #ECEFF1;
+}
+.ept-product-card-img img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.35s ease;
+}
+.ept-product-card:hover .ept-product-card-img img {
+	transform: scale(1.05);
+}
+.ept-product-card-body {
+	padding: 1.25rem 1.5rem;
+}
+.ept-product-card-body h3 {
+	margin: 0 0 0.5rem 0 !important;
+	font-size: 1.125rem !important;
+	color: #1B5E20 !important;
+	font-weight: 700;
+}
+.ept-product-card-body p {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: #546E7A;
+	line-height: 1.55;
+}
+.ept-product-card-link {
+	display: inline-block;
+	margin-top: 0.75rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: #2E7D32;
+}
+.ept-product-card:hover .ept-product-card-link {
+	text-decoration: underline;
+}
+.ept-products-cta-wrap {
+	text-align: center;
+	margin-top: 1.5rem;
+	margin-bottom: 0;
+}
+
+/* ========== Témoignages (cartes avec citation) ========== */
+.ept-testimonials {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+.ept-testimonial {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	border-left: 4px solid #4CAF50;
+}
+.ept-testimonial blockquote {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+	background: none !important;
+}
+.ept-testimonial cite {
+	display: block;
+	margin-top: 1rem;
+	font-size: 0.875rem;
+	color: #2E7D32;
+	font-style: normal;
+	font-weight: 600;
+}
+
+/* ========== CTA carrousel photos (section accueil) ========== */
+.ept-cta-carousel-wrap {
+	margin-bottom: 2rem;
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+.ept-cta-carousel {
+	overflow: hidden;
+	background: var(--ept-gray-light, #ECEFF1);
+}
+.ept-cta-carousel-track {
+	display: flex;
+	width: 600%; /* 6 slides (5 + 1 duplicate) */
+	animation: ept-cta-carousel 24s linear infinite;
+}
+.ept-cta-carousel-slide {
+	flex: 0 0 16.666%; /* 100/6 */
+	aspect-ratio: 21/9;
+	min-height: 200px;
+}
+.ept-cta-carousel-slide img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+@keyframes ept-cta-carousel {
+	0% { transform: translateX(0); }
+	16.666% { transform: translateX(-16.666%); }
+	33.333% { transform: translateX(-33.333%); }
+	50% { transform: translateX(-50%); }
+	66.666% { transform: translateX(-66.666%); }
+	83.333% { transform: translateX(-83.333%); }
+	100% { transform: translateX(0); }
+}
+@media (max-width: 768px) {
+	.ept-cta-carousel-slide { aspect-ratio: 16/9; min-height: 180px; }
+}
+
+/* ========== CTA final bandeau ========== */
+.ept-cta-bandeau {
+	text-align: center;
+	padding: 3rem 1.5rem;
+	background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+	border-radius: 16px;
+	margin: 3rem 0;
+	color: #fff;
+}
+.ept-cta-bandeau h2 { color: #fff !important; margin-bottom: 0.75rem; }
+.ept-cta-bandeau p { margin-bottom: 1.25rem; opacity: 0.95; }
+.ept-cta-bandeau .cta-audit {
+	background: #FFC107 !important;
+	color: #111 !important;
+}
+
+/* ========== Images responsives dans le contenu ========== */
+.entry-content .ept-img-wrap,
+main .ept-img-wrap {
+	margin: 2rem 0;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+.entry-content .ept-img-wrap img,
+main .ept-img-wrap img {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+.entry-content .ept-img-caption,
+main .ept-img-caption {
+	text-align: center;
+	font-size: 0.875rem;
+	color: #78909C;
+	margin-top: 0.5rem;
+}
+
+/* Code (page Bloc) */
+.entry-content code,
+main code {
+	background: #ECEFF1;
+	padding: 0.2em 0.5em;
+	border-radius: 4px;
+	font-size: 0.9em;
+	color: #2E7D32;
+}
+
+/* ========== Simulateur – encadré calculateur ========== */
+.ept-calculateur-wrap {
+	background: linear-gradient(180deg, #ECEFF1 0%, #fff 100%);
+	border-radius: 16px;
+	padding: 2rem;
+	border: 1px solid rgba(46,125,50,0.15);
+}
+.ept-calculateur-wrap .protech-calculateur {
+	margin: 1rem 0;
+}
+.ept-card-icon {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #fff;
+}
+.ept-card .ept-card-icon:not([class*="emoji"]) {
+	font-size: 1.5rem;
+}
+
+/* ========== Témoignages avec avatar ========== */
+.ept-testimonial-with-img {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+.ept-testimonial-avatar {
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	overflow: hidden;
+	margin-bottom: 1rem;
+	border: 3px solid #4CAF50;
+	flex-shrink: 0;
+}
+.ept-testimonial-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.ept-testimonial-with-img blockquote { text-align: center; }
+.ept-cards-sectors { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+
+/* ========== Contact – formulaire + colonne infos ========== */
+.ept-contact-layout {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr;
+	gap: 2.5rem;
+	align-items: start;
+	margin: 2rem 0;
+}
+@media (max-width: 900px) {
+	.ept-contact-layout { grid-template-columns: 1fr; }
+}
+.ept-contact-form-col h2 { margin-top: 0; }
+.ept-contact-form {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.75rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	border: 1px solid rgba(33,150,243,0.1);
+}
+.ept-form-row {
+	margin-bottom: 1.25rem;
+}
+.ept-form-row label {
+	display: block;
+	margin-bottom: 0.35rem;
+	font-weight: 600;
+	color: #2E7D32;
+}
+.ept-form-row .required { color: #c62828; }
+.ept-contact-form input[type="text"],
+.ept-contact-form input[type="email"],
+.ept-contact-form input[type="tel"],
+.ept-contact-form select,
+.ept-contact-form textarea {
+	width: 100%;
+	padding: 12px 14px;
+	border: 2px solid #CFD8DC;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-family: inherit;
+	transition: border-color 0.2s ease;
+}
+.ept-contact-form input:focus,
+.ept-contact-form select:focus,
+.ept-contact-form textarea:focus {
+	outline: none;
+	border-color: #2196F3;
+}
+.ept-contact-form textarea { resize: vertical; min-height: 100px; }
+.ept-form-submit { margin-bottom: 0; margin-top: 1rem; }
+.ept-contact-form .cta-audit { cursor: pointer; border: none; }
+.ept-form-note { font-size: 0.875rem; color: #78909C; margin-top: 1rem; }
+.ept-contact-card {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+	border-left: 4px solid #4CAF50;
+	margin-bottom: 1rem;
+}
+.ept-contact-card h3 { margin-top: 0; }
+.ept-contact-info-col .ept-split-img { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+/* ========== Header – design pro, charte ProTech (vert, bleu, neutres) ========== */
+/* Barre supérieure : dégradé vert, logo, utilitaires avec icônes SVG */
+.ept-header-top-bar {
+	background: linear-gradient(90deg, var(--ept-green-dark) 0%, var(--ept-green-medium) 48%, var(--ept-green-bright) 100%);
+	position: sticky;
+	top: 0;
+	z-index: 10000;
+	min-height: 52px;
+	box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+}
+.ept-header-top-bar-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.5rem;
+	min-height: 52px;
+	gap: 1rem;
+}
+.ept-header-top-bar-logo a {
+	display: inline-block;
+	font-size: 1.375rem;
+	font-weight: 700;
+	color: var(--ept-white) !important;
+	text-decoration: none;
+	letter-spacing: 0.03em;
+	line-height: 1.2;
+	transition: opacity var(--ept-transition);
+}
+.ept-header-top-bar-logo a:hover {
+	opacity: 0.92;
+	color: var(--ept-white) !important;
+}
+.ept-header-top-bar-logo a:focus-visible {
+	outline: 2px solid var(--ept-white);
+	outline-offset: 3px;
+	border-radius: 2px;
+}
+.ept-header-top-bar-utils {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	flex-wrap: nowrap;
+}
+.ept-util-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--ept-white) !important;
+	font-size: 0.875rem;
+	font-weight: 500;
+	text-decoration: none;
+	letter-spacing: 0.01em;
+	padding: 0.4rem 0;
+	border-bottom: 2px solid transparent;
+	transition: opacity var(--ept-transition), border-color var(--ept-transition);
+}
+.ept-util-link:hover {
+	opacity: 1;
+	border-bottom-color: rgba(255,255,255,0.7);
+	color: var(--ept-white) !important;
+}
+.ept-util-link:focus-visible {
+	outline: 2px solid var(--ept-white);
+	outline-offset: 3px;
+	border-radius: 2px;
+}
+.ept-util-icon-svg {
+	flex-shrink: 0;
+	opacity: 0.95;
+}
+.ept-util-link:hover .ept-util-icon-svg {
+	opacity: 1;
+}
+
+/* Masquer tout le header Astra (menu dupliqué, barre blanche) : on garde uniquement la barre .ept-nav-bar injectée via astra_header_before */
+body.astra-child-protech #masthead #ast-desktop-header,
+body.astra-child-protech #masthead .ast-main-header-wrap,
+body.astra-child-protech #masthead .ast-below-header,
+body.astra-child-protech #masthead .ast-below-header-wrap,
+body.astra-child-protech #masthead .ast-site-header-wrap {
+	display: none !important;
+}
+/* Supprimer la marge blanche entre menu (.ept-nav-bar) et carousel : #masthead Astra totalement réduit */
+body.astra-child-protech #masthead {
+	min-height: 0 !important;
+	height: 0 !important;
+	max-height: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	overflow: hidden !important;
+	border: none !important;
+	line-height: 0 !important;
+}
+/* Éviter tout espace entre ept-nav-bar et #content */
+body.astra-child-protech .ept-nav-bar {
+	margin-bottom: 0 !important;
+}
+body.astra-child-protech #content {
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+}
+
+/* Barre principale : plus utilisée (header masqué) – conservé pour compatibilité */
+body.astra-child-protech .ast-primary-header-bar {
+	height: 35px;
+}
+body.astra-child-protech .ast-primary-header-bar .site-branding {
+	display: none;
+}
+body.astra-child-protech .ast-header-wrap,
+body.astra-child-protech .main-header-bar-wrap {
+	box-shadow: none;
+}
+body.astra-child-protech .main-header-bar {
+	padding: 0 1.5rem;
+	min-height: 35px;
+	max-width: 960px;
+	margin: 0 auto;
+	border-bottom: none;
+	background: var(--ept-white);
+	display: flex;
+	align-items: center;
+}
+body.astra-child-protech .ast-primary-header-bar .ast-container {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: flex-start;
+	width: 100%;
+	min-height: 35px;
+}
+body.astra-child-protech .ast-primary-header-bar .main-header-bar-navigation {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: visible;
+}
+body.astra-child-protech .main-navigation .main-header-menu,
+body.astra-child-protech .main-header-menu {
+	display: flex;
+	align-items: center;
+	gap: 0.15rem;
+	flex-wrap: nowrap;
+	white-space: nowrap;
+}
+body.astra-child-protech .main-navigation .main-header-menu > li > a,
+body.astra-child-protech .main-header-menu > li > a,
+body.astra-child-protech .main-header-menu a.menu-link {
+	display: inline-flex;
+	align-items: center;
+	height: 50px;
+	max-height: 50px;
+	padding: 0 0.75rem;
+	font-size: 0.8125rem;
+	line-height: 1.2;
+	font-weight: 500;
+	color: var(--ept-gray-dark);
+	border-radius: var(--ept-radius);
+	border-bottom: 3px solid transparent;
+	transition: color var(--ept-transition), background var(--ept-transition), border-color var(--ept-transition);
+	white-space: nowrap;
+	box-sizing: border-box;
+}
+/* Menu dans la barre noire (.ept-nav-bar) : toujours visible, liens blancs / ambre sur fond noir */
+body.astra-child-protech .ept-nav-bar .main-header-menu,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap .main-header-menu,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap ul {
+	display: flex !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: 0.25rem;
+}
+body.astra-child-protech .ept-nav-bar .main-header-menu > li > a,
+body.astra-child-protech .ept-nav-bar .main-header-menu a.menu-link,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap ul a {
+	color: #fff !important;
+	height: auto;
+	max-height: none;
+	padding: 0.4rem 0.65rem;
+	border-bottom-color: transparent;
+	background: transparent !important;
+}
+body.astra-child-protech .ept-nav-bar .main-header-menu > li > a:hover,
+body.astra-child-protech .ept-nav-bar .main-header-menu a.menu-link:hover,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap ul a:hover {
+	color: #FFEB3B !important;
+	background: transparent !important;
+	border-bottom-color: transparent !important;
+}
+body.astra-child-protech .ept-nav-bar .main-header-menu > li.current-menu-item > a,
+body.astra-child-protech .ept-nav-bar .main-header-menu > li.ept-current-item > a,
+body.astra-child-protech .ept-nav-bar .main-header-menu a.ept-current-link,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap .current_page_item > a,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap .ept-current-item > a,
+body.astra-child-protech .ept-nav-bar .ept-nav-menu-wrap a.ept-current-link {
+	color: #4CAF50 !important;
+	background: transparent !important;
+	border-bottom-color: transparent !important;
+}
+body.astra-child-protech .main-navigation .main-header-menu > li > a:hover,
+body.astra-child-protech .main-header-menu > li > a:hover {
+	background: rgba(76, 175, 80, 0.08);
+	color: var(--ept-green-dark);
+	border-bottom-color: var(--ept-green-bright);
+}
+/* État actif : priorité à la classe ajoutée par notre script (fix menu qui ne change pas) */
+body.astra-child-protech .main-navigation .main-header-menu > li.ept-current-item > a,
+body.astra-child-protech .main-header-menu > li.ept-current-item > a,
+body.astra-child-protech .main-navigation .main-header-menu > li.current-menu-item > a,
+body.astra-child-protech .main-header-menu > li.current-menu-item > a,
+body.astra-child-protech .main-navigation a.ept-current-link,
+body.astra-child-protech .main-header-menu a.ept-current-link {
+	color: var(--ept-green-dark);
+	font-weight: 600;
+	background: rgba(76, 175, 80, 0.06);
+	border-bottom-color: var(--ept-green-dark);
+}
+body.astra-child-protech .main-navigation .main-header-menu > li > a:focus-visible,
+body.astra-child-protech .main-header-menu > li > a:focus-visible {
+	outline: 2px solid var(--ept-blue-medium);
+	outline-offset: 2px;
+}
+body.astra-child-protech .menu-toggle {
+	padding: 0.65rem 1rem;
+	border-radius: var(--ept-radius);
+	font-weight: 600;
+	background-color: var(--ept-blue-medium);
+	color: var(--ept-white);
+	transition: background var(--ept-transition);
+}
+body.astra-child-protech .menu-toggle:hover {
+	background-color: var(--ept-blue-dark);
+	color: var(--ept-white);
+}
+body.astra-child-protech .menu-toggle:focus-visible {
+	outline: 2px solid var(--ept-blue-dark);
+	outline-offset: 2px;
+}
+
+/* Page active : secours par body class (si script désactivé) */
+body.astra-child-protech.ept-page-slug-realisations .main-header-menu a[href*="/realisations/"],
+body.astra-child-protech.ept-page-slug-realisations .main-navigation a[href*="/realisations/"],
+body.astra-child-protech.ept-page-slug-accueil .main-header-menu a[href*="/accueil/"],
+body.astra-child-protech.ept-page-slug-accueil .main-navigation a[href*="/accueil/"],
+body.astra-child-protech.ept-is-home .main-header-menu a[href*="/accueil/"],
+body.astra-child-protech.ept-is-home .main-navigation a[href*="/accueil/"],
+body.astra-child-protech.ept-is-home .main-header-menu a[href="/"],
+body.astra-child-protech.ept-is-home .main-navigation a[href="/"],
+body.astra-child-protech.ept-page-slug-blog .main-header-menu a[href*="/blog/"],
+body.astra-child-protech.ept-page-slug-blog .main-navigation a[href*="/blog/"],
+body.astra-child-protech.ept-page-slug-contact .main-header-menu a[href*="/contact/"],
+body.astra-child-protech.ept-page-slug-contact .main-navigation a[href*="/contact/"],
+body.astra-child-protech.ept-page-slug-a-propos .main-header-menu a[href*="/a-propos/"],
+body.astra-child-protech.ept-page-slug-a-propos .main-navigation a[href*="/a-propos/"],
+body.astra-child-protech.ept-page-slug-references-temoignages .main-header-menu a[href*="/references-temoignages/"],
+body.astra-child-protech.ept-page-slug-references-temoignages .main-navigation a[href*="/references-temoignages/"],
+body.astra-child-protech.ept-page-slug-simulateur .main-header-menu a[href*="/simulateur/"],
+body.astra-child-protech.ept-page-slug-simulateur .main-navigation a[href*="/simulateur/"] {
+	color: var(--ept-green-dark);
+	font-weight: 600;
+	background: rgba(76, 175, 80, 0.06);
+	border-bottom-color: var(--ept-green-dark);
+}
+
+/* Contenu principal : suppression des marges externes du container Astra */
+body.astra-child-protech #content .ast-container {
+	margin-left: 0;
+	margin-right: 0;
+	max-width: 100%;
+}
+
+/* Header : tablette – liens un peu plus serrés pour tenir sur une ligne, hauteur 35px */
+@media (max-width: 1024px) {
+	body.astra-child-protech .main-navigation .main-header-menu > li > a,
+	body.astra-child-protech .main-header-menu > li > a,
+	body.astra-child-protech .main-header-menu a.menu-link {
+		padding: 0 0.6rem;
+		font-size: 0.8rem;
+		height: 50px;
+		max-height: 50px;
+	}
+	.ept-header-top-bar-utils { gap: 1rem; }
+	.ept-util-link { font-size: 0.8125rem; }
+}
+
+/* ========== Menu hamburger – design identique sur toutes les tailles (desktop, tablette, mobile) ========== */
+.ept-nav-hamburger {
+	display: flex;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	padding: 0.5rem;
+	margin: 0 0 0 auto;
+	width: 44px;
+	height: 44px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	border-radius: 6px;
+	transition: background 0.2s;
+}
+.ept-nav-hamburger:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+.ept-nav-hamburger:focus-visible {
+	outline: 2px solid #FFEB3B;
+	outline-offset: 3px;
+}
+.ept-hamburger-bar {
+	display: block;
+	width: 22px;
+	height: 2px;
+	background: #fff;
+	border-radius: 1px;
+	transition: transform 0.25s, opacity 0.25s;
+}
+.ept-nav-bar.ept-nav-open .ept-nav-hamburger .ept-hamburger-bar:nth-child(1) {
+	transform: translateY(7px) rotate(45deg);
+}
+.ept-nav-bar.ept-nav-open .ept-nav-hamburger .ept-hamburger-bar:nth-child(2) {
+	opacity: 0;
+}
+.ept-nav-bar.ept-nav-open .ept-nav-hamburger .ept-hamburger-bar:nth-child(3) {
+	transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Menu overlay : toujours en mode overlay (masqué par défaut, affiché au clic) – toutes tailles */
+.ept-nav-bar .ept-nav-menu-wrap {
+	position: fixed !important;
+	top: 44px !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: auto !important;
+	background: #000 !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: stretch !important;
+	max-height: 0 !important;
+	overflow: hidden !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	transition: max-height 0.3s ease, opacity 0.25s, visibility 0.25s;
+	z-index: 9999 !important;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+	padding: 0 1rem !important;
+}
+.ept-nav-bar.ept-nav-open .ept-nav-menu-wrap {
+	max-height: 80vh !important;
+	opacity: 1 !important;
+	visibility: visible !important;
+	overflow-y: auto !important;
+}
+/* Menu vertical – liste déroulante */
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu,
+.ept-nav-bar .ept-nav-menu-wrap ul {
+	flex-direction: column !important;
+	align-items: stretch !important;
+	padding: 1rem 0 !important;
+	gap: 0 !important;
+	background: transparent !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu > li,
+.ept-nav-bar .ept-nav-menu-wrap ul > li {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	margin: 0 !important;
+	background: transparent !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu > li:last-child,
+.ept-nav-bar .ept-nav-menu-wrap ul > li:last-child {
+	border-bottom: none;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu > li > a,
+.ept-nav-bar .ept-nav-menu-wrap ul a {
+	display: block !important;
+	padding: 1rem 0.75rem !important;
+	font-size: 1rem !important;
+	color: #fff !important;
+	font-weight: 500;
+	background: transparent !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu > li > a:hover,
+.ept-nav-bar .ept-nav-menu-wrap ul a:hover {
+	color: #FFEB3B !important;
+	background: rgba(255, 255, 255, 0.06) !important;
+}
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu > li.ept-current-item > a,
+.ept-nav-bar .ept-nav-menu-wrap .main-header-menu > li.current-menu-item > a,
+.ept-nav-bar .ept-nav-menu-wrap ul > li.ept-current-item > a,
+.ept-nav-bar .ept-nav-menu-wrap ul > li.current-menu-item > a,
+.ept-nav-bar .ept-nav-menu-wrap a.ept-current-link {
+	color: #4CAF50 !important;
+	font-weight: 600 !important;
+}
+
+@media (max-width: 768px) {
+	.ept-nav-bar .ept-nav-bar-cta-wrap .ept-nav-cta {
+		padding: 0.35rem 0.6rem;
+		font-size: 0.75rem;
+		white-space: nowrap;
+	}
+}
+
+/* ========== Blog ========== */
+.ept-hero-blog { min-height: 45vh; }
+.ept-blog-layout { padding-top: 2rem; }
+.ept-article-featured {
+	display: grid;
+	grid-template-columns: 1fr 1.2fr;
+	gap: 2rem;
+	align-items: start;
+	max-width: 1000px;
+	margin: 0 auto 3rem;
+	padding-bottom: 2rem;
+	border-bottom: 2px solid #E0E0E0;
+}
+.ept-article-featured .ept-article-image {
+	position: relative;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+	aspect-ratio: 16/10;
+	max-height: 360px;
+}
+.ept-article-featured .ept-article-image img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: cover;
+}
+.ept-article-cat {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	background: #2E7D32;
+	color: #fff;
+	padding: 0.35rem 0.75rem;
+	border-radius: 6px;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+.ept-article-body .ept-article-date {
+	display: block;
+	font-size: 0.875rem;
+	color: #78909C;
+	margin-bottom: 0.5rem;
+}
+.ept-article-body h2 {
+	margin: 0 0 1rem !important;
+	font-size: 1.5rem !important;
+	line-height: 1.3;
+}
+.ept-article-body p {
+	margin-bottom: 1rem;
+	line-height: 1.65;
+	color: #37474F;
+}
+.ept-article-body .ept-cta-secondary {
+	display: inline-block;
+	margin-top: 0.5rem;
+}
+.ept-article-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 1.5rem;
+}
+.ept-article-card {
+	background: #fff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+	border: 1px solid rgba(46,125,50,0.08);
+}
+.ept-article-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+}
+.ept-article-card-img {
+	aspect-ratio: 16/10;
+	overflow: hidden;
+}
+.ept-article-card-img img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.ept-article-card-body {
+	padding: 1.25rem;
+}
+.ept-article-card-body time {
+	font-size: 0.8rem;
+	color: #78909C;
+}
+.ept-article-card-body h3 {
+	margin: 0.5rem 0 0.5rem !important;
+	font-size: 1.1rem !important;
+	line-height: 1.35;
+}
+.ept-article-card-body p {
+	margin: 0 0 0.75rem;
+	font-size: 0.9375rem;
+	color: #546E7A;
+	line-height: 1.5;
+}
+.ept-read-more {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #2E7D32;
+	text-decoration: none;
+}
+.ept-read-more:hover { color: #1565C0; text-decoration: underline; }
+@media (max-width: 768px) {
+	.ept-article-featured { grid-template-columns: 1fr; }
+}
