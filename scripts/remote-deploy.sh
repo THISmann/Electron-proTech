@@ -3,12 +3,21 @@ set -euo pipefail
 
 # remote-deploy.sh
 # This script is run on the target VM. It expects these environment variables to be set
-# (the workflow sets them in the ssh command):
-#   REGISTRY, REGISTRY_USERNAME, REGISTRY_PASSWORD (optional if public)
+# (the workflow sets them in the ssh command). It accepts either REGISTRY/REGISTRY_USERNAME/
+# REGISTRY_PASSWORD or DOCKERHUB_REGISTRY/DOCKERHUB_USERNAME/DOCKERHUB_PASSWORD.
+# Expected vars:
+#   DOCKERHUB_REGISTRY or REGISTRY
+#   DOCKERHUB_USERNAME or REGISTRY_USERNAME
+#   DOCKERHUB_PASSWORD or REGISTRY_PASSWORD
 #   IMAGE_NAME, IMAGE_TAG
 #   ENVIRONMENT (test or production)
 
-echo "[remote-deploy] starting — env=${ENVIRONMENT:-undefined} image=${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+# Resolve registry env var fallbacks
+REGISTRY_RESOLVED="${REGISTRY:-${DOCKERHUB_REGISTRY:-}}"
+REGISTRY_USERNAME_RESOLVED="${REGISTRY_USERNAME:-${DOCKERHUB_USERNAME:-}}"
+REGISTRY_PASSWORD_RESOLVED="${REGISTRY_PASSWORD:-${DOCKERHUB_PASSWORD:-}}"
+
+echo "[remote-deploy] starting — env=${ENVIRONMENT:-undefined} image=${REGISTRY_RESOLVED}/${IMAGE_NAME}:${IMAGE_TAG}"
 
 # Choose compose binary
 if command -v docker-compose >/dev/null 2>&1; then
@@ -20,10 +29,10 @@ else
   exit 2
 fi
 
-# Optionally login to private registry
-if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ] && [ -n "${REGISTRY:-}" ]; then
-  echo "[remote-deploy] logging into registry ${REGISTRY}"
-  echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY} -u "${REGISTRY_USERNAME}" --password-stdin
+# Optionally login to private registry (support resolved vars)
+if [ -n "${REGISTRY_USERNAME_RESOLVED:-}" ] && [ -n "${REGISTRY_PASSWORD_RESOLVED:-}" ] && [ -n "${REGISTRY_RESOLVED:-}" ]; then
+  echo "[remote-deploy] logging into registry ${REGISTRY_RESOLVED}"
+  echo "${REGISTRY_PASSWORD_RESOLVED}" | docker login ${REGISTRY_RESOLVED} -u "${REGISTRY_USERNAME_RESOLVED}" --password-stdin
 fi
 
 # Determine files

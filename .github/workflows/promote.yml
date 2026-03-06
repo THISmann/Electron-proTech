@@ -1,0 +1,59 @@
+name: Promote to production (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (required)'
+        required: true
+      skip_copy:
+        description: 'If true, do not copy compose files (default false)'
+        required: false
+        default: 'false'
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_HOST: ${{ secrets.AZURE_HOST }}
+      AZURE_KEY: ${{ secrets.AZURE_KEY }}
+      AZURE_USERNAME: ${{ secrets.AZURE_USERNAME }}
+      DOCKERHUB_REGISTRY: ${{ secrets.DOCKERHUB_REGISTRY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ env.AZURE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.AZURE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy compose files and deploy script to VM
+        if: ${{ inputs.skip_copy == 'false' }}
+        run: |
+          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/deploy"
+          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "mkdir -p ${REMOTE_DIR}"
+          scp docker-compose.yml ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker-compose.yml
+          if [ -f "docker-compose.production.yml" ]; then
+            scp docker-compose.production.yml ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/
+          fi
+          scp scripts/remote-deploy.sh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/remote-deploy.sh
+
+      - name: Execute remote deploy (production)
+        run: |
+          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/deploy"
+          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "chmod +x ${REMOTE_DIR}/remote-deploy.sh && cd ${REMOTE_DIR} && \
+            DOCKERHUB_REGISTRY='${{ env.DOCKERHUB_REGISTRY }}' \
+            DOCKERHUB_USERNAME='${{ env.DOCKERHUB_USERNAME }}' \
+            DOCKERHUB_PASSWORD='${{ env.DOCKERHUB_PASSWORD }}' \
+            IMAGE_NAME='${{ github.event.repository.name }}' \
+            IMAGE_TAG='${{ inputs.image_tag }}' \
+            ENVIRONMENT='production' \
+            ./remote-deploy.sh"
+
+      - name: Done
+        run: echo "Promoted image ${{ inputs.image_tag }} to production"

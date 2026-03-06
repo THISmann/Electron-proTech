@@ -1,0 +1,38 @@
+version: '3.8'
+
+# Example production compose that uses environment variable substitution.
+# The workflow and remote-deploy.sh provide these environment variables when
+# running on the VM:
+#   DOCKERHUB_REGISTRY (e.g. docker.io/youruser or myacr.azurecr.io)
+#   IMAGE_NAME (repo name, set in the workflow)
+#   IMAGE_TAG (tag produced by the workflow or chosen during promotion)
+#
+# This file is intentionally minimal — adapt service names, ports and volumes to
+# match your real application.
+
+services:
+  app:
+    image: "${DOCKERHUB_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - ENVIRONMENT=production
+      - NODE_ENV=production
+    # Example volume mapping (uncomment and adapt if needed)
+    # volumes:
+    #   - ./data:/data
+
+  # Example reverse-proxy (optional)
+  # proxy:
+  #   image: nginx:stable-alpine
+  #   depends_on:
+  #     - app
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+networks:
+  default:
+    driver: bridge
