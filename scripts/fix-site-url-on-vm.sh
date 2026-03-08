@@ -22,21 +22,35 @@ if [ -z "$URL" ]; then
   fi
 fi
 
-COMPOSE="$DOCKER compose -f docker-compose.yml"
+COMPOSE_BASE="$DOCKER compose -f docker-compose.yml"
 if [ -f docker-compose.test.yml ] && $DOCKER compose -f docker-compose.yml -f docker-compose.test.yml ps 2>/dev/null | grep -q Up; then
-  COMPOSE="$DOCKER compose -f docker-compose.yml -f docker-compose.test.yml"
+  COMPOSE_BASE="$DOCKER compose -f docker-compose.yml -f docker-compose.test.yml"
 elif [ -f docker-compose.production.yml ] && $DOCKER compose -f docker-compose.yml -f docker-compose.production.yml ps 2>/dev/null | grep -q Up; then
-  COMPOSE="$DOCKER compose -f docker-compose.yml -f docker-compose.production.yml"
+  COMPOSE_BASE="$DOCKER compose -f docker-compose.yml -f docker-compose.production.yml"
 else
-  COMPOSE="$DOCKER compose -f docker-compose.yml"
+  COMPOSE_BASE="$DOCKER compose -f docker-compose.yml"
 fi
-COMPOSE="$COMPOSE --profile tools"
+COMPOSE="$COMPOSE_BASE --profile tools"
 RUN_WP="$COMPOSE run --rm -v $(pwd)/scripts:/app/scripts -v $(pwd)/content-pages:/app/content-pages wp-cli"
 
+URL="${URL%/}"
 echo "Forçage des URLs à: $URL"
+
+# 1) Mettre SITE_URL dans .env pour que le mu-plugin et le conteneur WordPress l'utilisent
+if [ -f .env ]; then
+  grep -q '^SITE_URL=' .env && sed -i "s|^SITE_URL=.*|SITE_URL=$URL|" .env || echo "SITE_URL=$URL" >> .env
+else
+  echo "SITE_URL=$URL" >> .env
+fi
+
+# 2) Recréer le conteneur WordPress pour qu'il prenne le nouveau SITE_URL
+$COMPOSE_BASE up -d --force-recreate wordpress 2>/dev/null || true
+
+# 3) Forcer aussi en base et wp-config (secours)
 $RUN_WP wp config set WP_HOME "$URL" --raw --allow-root 2>/dev/null || true
 $RUN_WP wp config set WP_SITEURL "$URL" --raw --allow-root 2>/dev/null || true
 $RUN_WP wp option update home "$URL" --allow-root
 $RUN_WP wp option update siteurl "$URL" --allow-root
 $RUN_WP wp cache flush --allow-root 2>/dev/null || true
-echo "✅ URLs mises à jour. Rechargez le site (Ctrl+F5)."
+
+echo "✅ URLs mises à jour (SITE_URL dans .env + conteneur recréé). Rechargez le site (Ctrl+F5)."

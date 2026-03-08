@@ -57,7 +57,17 @@ jobs:
       - name: Create .env on runner and copy to VM
         env:
           ENV: ${{ steps.env.outputs.env }}
+          SITE_URL_SECRET: ${{ secrets.SITE_URL }}
         run: |
+          if [ -n "$SITE_URL_SECRET" ]; then
+            SITE_URL="$SITE_URL_SECRET"
+          elif [ "$ENV" = "test" ]; then
+            SITE_URL="http://$AZURE_HOST:8080"
+          else
+            SITE_URL="http://$AZURE_HOST"
+          fi
+          SITE_URL="${SITE_URL%/}"
+
           if [ "$ENV" = "production" ]; then
             MYSQL_ROOT="${{ secrets.PROD_MYSQL_ROOT_PASSWORD }}"
             DB_USER="${{ secrets.PROD_DB_USER }}"
@@ -69,7 +79,6 @@ jobs:
             DB_PASSWORD="${{ secrets.TEST_DB_PASSWORD }}"
             DB_NAME="${{ secrets.TEST_DB_NAME }}"
           fi
-          # Valeurs par défaut si les secrets ne sont pas encore configurés
           MYSQL_ROOT="${MYSQL_ROOT:-protech-root-change-me}"
           DB_USER="${DB_USER:-wordpress}"
           DB_PASSWORD="${DB_PASSWORD:-protech-wp-change-me}"
@@ -81,14 +90,15 @@ jobs:
             echo "WORDPRESS_DB_PASSWORD=${DB_PASSWORD}"
             echo "WORDPRESS_DB_NAME=${DB_NAME}"
             echo "WORDPRESS_TABLE_PREFIX=wp_"
+            echo "SITE_URL=${SITE_URL}"
           } > /tmp/deploy.env
 
           scp -o StrictHostKeyChecking=accept-new /tmp/deploy.env "$AZURE_USERNAME@$AZURE_HOST:~/app/.env"
-          echo "✅ .env copié sur la VM ($ENV)"
+          echo "✅ .env copié (SITE_URL=$SITE_URL)"
 
       - name: Create directories on VM
         run: |
-          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes ~/app/scripts ~/app/content-pages"
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes ~/app/wp-content/mu-plugins ~/app/scripts ~/app/content-pages"
 
       - name: Copy project files to VM
         env:
@@ -101,7 +111,8 @@ jobs:
           scp -o StrictHostKeyChecking=accept-new -r wp-content/themes/astra-child-protech "$REMOTE:~/app/wp-content/themes/"
           scp -o StrictHostKeyChecking=accept-new -r scripts "$REMOTE:~/app/"
           scp -o StrictHostKeyChecking=accept-new -r content-pages "$REMOTE:~/app/"
-          echo "✅ Fichiers copiés (thème, scripts, content-pages)"
+          scp -o StrictHostKeyChecking=accept-new -r wp-content/mu-plugins "$REMOTE:~/app/wp-content/"
+          echo "✅ Fichiers copiés (thème, scripts, content-pages, mu-plugins)"
 
       - name: Ensure Docker is running on VM
         run: |
@@ -132,8 +143,8 @@ jobs:
             fi
             echo '📦 Pull des images...'
             \$COMPOSE -f docker-compose.yml -f docker-compose.${ENV}.yml pull --quiet
-            echo '🚀 Démarrage des containers...'
-            \$COMPOSE -f docker-compose.yml -f docker-compose.${ENV}.yml up -d --remove-orphans
+            echo '🚀 Démarrage des containers (force-recreate pour prendre .env à jour, ex. SITE_URL)...'
+            \$COMPOSE -f docker-compose.yml -f docker-compose.${ENV}.yml up -d --remove-orphans --force-recreate
             \$DOCKER image prune -f
             echo '✅ Stack ${ENV} déployée'
             \$DOCKER ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"

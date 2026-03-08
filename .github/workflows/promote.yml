@@ -29,7 +29,16 @@ jobs:
           ssh-keyscan -H "$AZURE_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Create .env (production) and copy to VM
+        env:
+          SITE_URL_SECRET: ${{ secrets.SITE_URL }}
         run: |
+          if [ -n "$SITE_URL_SECRET" ]; then
+            SITE_URL="$SITE_URL_SECRET"
+          else
+            SITE_URL="http://$AZURE_HOST"
+          fi
+          SITE_URL="${SITE_URL%/}"
+
           MYSQL_ROOT="${{ secrets.PROD_MYSQL_ROOT_PASSWORD }}"
           DB_USER="${{ secrets.PROD_DB_USER }}"
           DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}"
@@ -45,14 +54,15 @@ jobs:
             echo "WORDPRESS_DB_PASSWORD=${DB_PASSWORD}"
             echo "WORDPRESS_DB_NAME=${DB_NAME}"
             echo "WORDPRESS_TABLE_PREFIX=wp_"
+            echo "SITE_URL=${SITE_URL}"
           } > /tmp/deploy.env
 
           scp -o StrictHostKeyChecking=accept-new /tmp/deploy.env "$AZURE_USERNAME@$AZURE_HOST:~/app/.env"
-          echo "✅ .env production copié sur la VM"
+          echo "✅ .env production copié (SITE_URL=$SITE_URL)"
 
       - name: Create directories on VM
         run: |
-          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes ~/app/scripts ~/app/content-pages"
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes ~/app/wp-content/mu-plugins ~/app/scripts ~/app/content-pages"
 
       - name: Copy project files to VM
         run: |
@@ -63,7 +73,8 @@ jobs:
           scp -o StrictHostKeyChecking=accept-new -r wp-content/themes/astra-child-protech "$REMOTE:~/app/wp-content/themes/"
           scp -o StrictHostKeyChecking=accept-new -r scripts "$REMOTE:~/app/"
           scp -o StrictHostKeyChecking=accept-new -r content-pages "$REMOTE:~/app/"
-          echo "✅ Fichiers copiés (thème, scripts, content-pages)"
+          scp -o StrictHostKeyChecking=accept-new -r wp-content/mu-plugins "$REMOTE:~/app/wp-content/"
+          echo "✅ Fichiers copiés (thème, scripts, content-pages, mu-plugins)"
 
       - name: Ensure Docker is running on VM
         run: |
@@ -89,8 +100,8 @@ jobs:
             fi
             echo '📦 Pull des images...'
             \$COMPOSE -f docker-compose.yml -f docker-compose.production.yml pull --quiet
-            echo '🚀 Démarrage des containers (production)...'
-            \$COMPOSE -f docker-compose.yml -f docker-compose.production.yml up -d --remove-orphans
+            echo '🚀 Démarrage des containers (production, force-recreate pour SITE_URL)...'
+            \$COMPOSE -f docker-compose.yml -f docker-compose.production.yml up -d --remove-orphans --force-recreate
             sudo docker image prune -f
             echo '✅ Stack production déployée'
             sudo docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"

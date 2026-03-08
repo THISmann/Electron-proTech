@@ -45,9 +45,11 @@ services:
       WORDPRESS_DB_HOST: mariadb:3306
       WP_REDIS_HOST: redis
       WP_REDIS_PORT: "6379"
+      SITE_URL: ${SITE_URL:-}
     volumes:
       - wordpress_data:/var/www/html
       - ./wp-content/themes/astra-child-protech:/var/www/html/wp-content/themes/astra-child-protech:ro
+      - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins:ro
     networks:
       - default
 
