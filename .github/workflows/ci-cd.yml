@@ -2,8 +2,7 @@
 # - develop → déploiement TEST (port 8080)
 # - main → déploiement PRODUCTION (port 80)
 # Secrets utilisés : AZURE_HOST, AZURE_KEY, AZURE_USERNAME
-# Optionnel (recommandé) : TEST_MYSQL_ROOT_PASSWORD, TEST_DB_USER, TEST_DB_PASSWORD, TEST_DB_NAME
-#                         PROD_MYSQL_ROOT_PASSWORD, PROD_DB_USER, PROD_DB_PASSWORD, PROD_DB_NAME
+# Optionnel : TEST_* / PROD_* (DB), WORDPRESS_ADMIN_PASSWORD, WORDPRESS_ADMIN_EMAIL (1ère install)
 
 name: CI/CD — Deploy to Azure VM
 
@@ -89,7 +88,7 @@ jobs:
 
       - name: Create directories on VM
         run: |
-          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes"
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes ~/app/scripts ~/app/content-pages"
 
       - name: Copy project files to VM
         env:
@@ -100,7 +99,9 @@ jobs:
           scp -o StrictHostKeyChecking=accept-new "docker-compose.${ENV}.yml" "$REMOTE:~/app/docker-compose.${ENV}.yml"
           scp -o StrictHostKeyChecking=accept-new docker/nginx/wordpress.conf "$REMOTE:~/app/docker/nginx/wordpress.conf"
           scp -o StrictHostKeyChecking=accept-new -r wp-content/themes/astra-child-protech "$REMOTE:~/app/wp-content/themes/"
-          echo "✅ Fichiers copiés"
+          scp -o StrictHostKeyChecking=accept-new -r scripts "$REMOTE:~/app/"
+          scp -o StrictHostKeyChecking=accept-new -r content-pages "$REMOTE:~/app/"
+          echo "✅ Fichiers copiés (thème, scripts, content-pages)"
 
       - name: Ensure Docker is running on VM
         run: |
@@ -136,6 +137,66 @@ jobs:
             \$DOCKER image prune -f
             echo '✅ Stack ${ENV} déployée'
             \$DOCKER ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+
+      - name: WordPress setup and inject site content
+        env:
+          ENV: ${{ steps.env.outputs.env }}
+          WP_ADMIN_PASSWORD: ${{ secrets.WORDPRESS_ADMIN_PASSWORD }}
+          WP_ADMIN_EMAIL: ${{ secrets.WORDPRESS_ADMIN_EMAIL }}
+        run: |
+          if [ "$ENV" = "test" ]; then
+            SITE_URL="http://$AZURE_HOST:8080"
+          else
+            SITE_URL="http://$AZURE_HOST"
+          fi
+          WP_PASS="${WP_ADMIN_PASSWORD:-ProTech-Deploy-$(openssl rand -hex 4)}"
+          WP_EMAIL="${WP_ADMIN_EMAIL:-admin@protech.local}"
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "set -e
+            cd ~/app
+            COMPOSE='sudo docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml --profile tools'
+            RUN_WP=\"\$COMPOSE run --rm -v \$(pwd)/scripts:/app/scripts -v \$(pwd)/content-pages:/app/content-pages wp-cli\"
+
+            echo '⏳ Attente MySQL/WordPress (30s)...'
+            sleep 30
+
+            echo '🔧 Installation WordPress (si nécessaire)...'
+            if ! \$RUN_WP wp core is-installed --allow-root 2>/dev/null; then
+              \$RUN_WP wp core install --url=\"$SITE_URL\" --title=\"Electron ProTech\" --admin_user=admin --admin_password=\"$WP_PASS\" --admin_email=\"$WP_EMAIL\" --skip-email --allow-root
+              echo '✅ WordPress installé (admin / mot de passe dans les secrets ou logs)'
+            fi
+
+            echo '🎨 Thèmes et extensions...'
+            \$RUN_WP wp theme install astra --activate --allow-root 2>/dev/null || true
+            \$RUN_WP wp theme activate astra-child-protech --allow-root
+            \$RUN_WP wp plugin install elementor --activate --allow-root 2>/dev/null || true
+
+            echo '📄 Création des pages...'
+            \$RUN_WP wp post create --post_type=page --post_title='Accueil' --post_name=accueil --post_status=publish --post_content='<!-- placeholder -->' --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Nos réalisations' --post_name=realisations --post_status=publish --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Installation solaire' --post_name=installation-solaire --post_status=publish --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Maintenance & SAV' --post_name=maintenance-sav --post_status=publish --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Simulateur économies' --post_name=simulateur --post_status=publish --post_content='[protech_calculateur_economies]' --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Références & Témoignages' --post_name=references-temoignages --post_status=publish --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='À propos' --post_name=a-propos --post_status=publish --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Contact & Devis' --post_name=contact --post_status=publish --allow-root 2>/dev/null || true
+            \$RUN_WP wp post create --post_type=page --post_title='Blog' --post_name=blog --post_status=publish --allow-root 2>/dev/null || true
+
+            ID_ACCUEIL=\$( \$RUN_WP wp post list --post_type=page --name=accueil --field=ID --format=ids --allow-root 2>/dev/null | tr -d ' ' )
+            if [ -n \"\$ID_ACCUEIL\" ]; then
+              \$RUN_WP wp option update show_on_front page --allow-root
+              \$RUN_WP wp option update page_on_front \"\$ID_ACCUEIL\" --allow-root
+            fi
+            \$RUN_WP wp rewrite structure '/%postname%/' --allow-root
+            \$RUN_WP wp rewrite flush --allow-root
+
+            echo '📝 Injection du contenu (content-pages → WordPress)...'
+            \$RUN_WP wp eval-file /app/scripts/update-pages-content.php --allow-root
+
+            echo '✅ Site conçu déployé (thème + contenu)'
+          "
+          if [ -z "$WP_ADMIN_PASSWORD" ]; then
+            echo "⚠️ Définir le secret WORDPRESS_ADMIN_PASSWORD pour un mot de passe admin fixe (sinon généré à chaque 1ère install)."
+          fi
 
       - name: Health check
         env:
