@@ -117,10 +117,8 @@ jobs:
               echo '✅ WordPress installé'
             fi
 
-            echo '🎨 Thèmes et extensions...'
-            \$RUN_WP wp theme install astra --activate --allow-root 2>/dev/null || true
-            \$RUN_WP wp theme activate astra-child-protech --allow-root
-            \$RUN_WP wp plugin install elementor --activate --allow-root 2>/dev/null || true
+            echo '🎨 Thèmes et extensions (même conteneur pour voir le thème parent)...'
+            \$RUN_WP sh -c 'wp theme install astra --activate --allow-root 2>/dev/null || true && wp theme activate astra-child-protech --allow-root && wp plugin install elementor --activate --allow-root 2>/dev/null || true'
 
             echo '📄 Création des pages...'
             \$RUN_WP wp post create --post_type=page --post_title='Accueil' --post_name=accueil --post_status=publish --post_content='<!-- placeholder -->' --allow-root 2>/dev/null || true
