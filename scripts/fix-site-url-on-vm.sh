@@ -43,14 +43,30 @@ else
   echo "SITE_URL=$URL" >> .env
 fi
 
-# 2) Recréer le conteneur WordPress pour qu'il prenne le nouveau SITE_URL
+# 2) S'assurer que le mu-plugin existe (pour forcer les URLs depuis SITE_URL à chaque requête)
+mkdir -p wp-content/mu-plugins
+cat > wp-content/mu-plugins/protech-site-url.php << 'MUPHP'
+<?php
+if ( ! defined( 'ABSPATH' ) ) return;
+$u = getenv( 'SITE_URL' );
+if ( $u !== false && $u !== '' ) {
+  $u = rtrim( $u, '/' );
+  add_filter( 'pre_option_home', function() use ( $u ) { return $u; }, 1 );
+  add_filter( 'pre_option_siteurl', function() use ( $u ) { return $u; }, 1 );
+}
+MUPHP
+
+# 3) Recréer le conteneur WordPress pour qu'il prenne SITE_URL et le mu-plugin
 $COMPOSE_BASE up -d --force-recreate wordpress 2>/dev/null || true
 
-# 3) Forcer aussi en base et wp-config (secours)
-$RUN_WP wp config set WP_HOME "$URL" --raw --allow-root 2>/dev/null || true
-$RUN_WP wp config set WP_SITEURL "$URL" --raw --allow-root 2>/dev/null || true
+# 4) Forcer en base + wp-config (--user root pour pouvoir écrire wp-config.php)
+$COMPOSE run --rm --user root -v "$(pwd)/scripts:/app/scripts" -v "$(pwd)/content-pages:/app/content-pages" wp-cli wp config set WP_HOME "$URL" --raw --allow-root 2>/dev/null || true
+$COMPOSE run --rm --user root -v "$(pwd)/scripts:/app/scripts" -v "$(pwd)/content-pages:/app/content-pages" wp-cli wp config set WP_SITEURL "$URL" --raw --allow-root 2>/dev/null || true
 $RUN_WP wp option update home "$URL" --allow-root
 $RUN_WP wp option update siteurl "$URL" --allow-root
 $RUN_WP wp cache flush --allow-root 2>/dev/null || true
 
-echo "✅ URLs mises à jour (SITE_URL dans .env + conteneur recréé). Rechargez le site (Ctrl+F5)."
+# 5) Redémarrer WordPress pour être sûr que tout est pris en compte
+$COMPOSE_BASE restart wordpress 2>/dev/null || true
+
+echo "✅ URLs mises à jour (SITE_URL dans .env + mu-plugin + conteneur recréé). Rechargez le site (Ctrl+F5)."
