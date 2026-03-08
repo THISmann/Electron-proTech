@@ -143,8 +143,12 @@ jobs:
           ENV: ${{ steps.env.outputs.env }}
           WP_ADMIN_PASSWORD: ${{ secrets.WORDPRESS_ADMIN_PASSWORD }}
           WP_ADMIN_EMAIL: ${{ secrets.WORDPRESS_ADMIN_EMAIL }}
+          SITE_URL_SECRET: ${{ secrets.SITE_URL }}
         run: |
-          if [ "$ENV" = "test" ]; then
+          if [ -n "$SITE_URL_SECRET" ]; then
+            SITE_URL="$SITE_URL_SECRET"
+            echo "Using SITE_URL from secret: $SITE_URL"
+          elif [ "$ENV" = "test" ]; then
             SITE_URL="http://$AZURE_HOST:8080"
           else
             SITE_URL="http://$AZURE_HOST"
@@ -190,10 +194,13 @@ jobs:
             echo '📝 Injection du contenu (content-pages → WordPress)...'
             \$RUN_WP wp eval-file /app/scripts/update-pages-content.php --allow-root
 
-            echo '🔗 Mise à jour des URLs du site (pour que le CSS/JS se chargent correctement)...'
+            echo '🔗 Forcer les URLs du site (wp-config + DB → CSS/JS chargés correctement)...'
+            \$RUN_WP wp config set WP_HOME \"$SITE_URL\" --raw --allow-root 2>/dev/null || true
+            \$RUN_WP wp config set WP_SITEURL \"$SITE_URL\" --raw --allow-root 2>/dev/null || true
             \$RUN_WP wp option update home \"$SITE_URL\" --allow-root
             \$RUN_WP wp option update siteurl \"$SITE_URL\" --allow-root
             \$RUN_WP wp cache flush --allow-root 2>/dev/null || true
+            echo \"   URLs forcées à: $SITE_URL\"
 
             echo '✅ Site conçu déployé (thème + contenu + URLs)'
           "
