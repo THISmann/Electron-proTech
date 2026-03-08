@@ -1,21 +1,8 @@
-version: '3.8'
-
-# Example test compose that uses environment variable substitution.
-# It mirrors docker-compose.production.yml but exposes the app on 8080 locally
-# so you can run test and prod concurrently on the same host if needed.
+# Override pour l'environnement TEST (déploiement depuis la branche develop).
+# Le site est exposé sur le port 8080 pour ne pas conflit avec la production (80).
 
 services:
-  app:
-    image: "${DOCKERHUB_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-    restart: unless-stopped
+  traefik:
     ports:
       - "8080:80"
-    environment:
-      - ENVIRONMENT=test
-      - NODE_ENV=development
-    # volumes:
-    #   - ./data:/data
-
-networks:
-  default:
-    driver: bridge
+      - "8081:8080"

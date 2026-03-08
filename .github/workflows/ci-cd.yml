@@ -1,4 +1,11 @@
-name: CI/CD — Docker Compose to Azure VM
+# CI/CD — Déploiement sur VM Azure (test ou production)
+# - develop → déploiement TEST (port 8080)
+# - main → déploiement PRODUCTION (port 80)
+# Secrets utilisés : AZURE_HOST, AZURE_KEY, AZURE_USERNAME
+# Optionnel (recommandé) : TEST_MYSQL_ROOT_PASSWORD, TEST_DB_USER, TEST_DB_PASSWORD, TEST_DB_NAME
+#                         PROD_MYSQL_ROOT_PASSWORD, PROD_DB_USER, PROD_DB_PASSWORD, PROD_DB_NAME
+
+name: CI/CD — Deploy to Azure VM
 
 on:
   push:
@@ -8,13 +15,17 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Optional environment override: test or production'
-        required: false
-        default: ''
+        description: "Environnement : test ou production"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+          - production
 
 jobs:
   deploy:
-    name: Deploy to Azure VM
+    name: Deploy (${{ github.ref_name }})
     runs-on: ubuntu-latest
     env:
       AZURE_HOST: ${{ secrets.AZURE_HOST }}
@@ -25,113 +36,110 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ─── Déterminer l'environnement (test ou production) ───────
       - name: Determine environment
-        id: determine-env
+        id: env
         run: |
-          if [ "${{ github.event.inputs.environment }}" != "" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "env=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "env=production" >> $GITHUB_OUTPUT
           else
             echo "env=test" >> $GITHUB_OUTPUT
           fi
+          echo "Deploying environment: $(cat $GITHUB_OUTPUT | grep '^env=' | cut -d= -f2)"
 
-      # ─── Préparer la clé SSH ────────────────────────────────────
       - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ env.AZURE_KEY }}" > ~/.ssh/id_rsa
+          printf '%s' "$AZURE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.AZURE_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$AZURE_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      # ─── Créer le .env sur la VM selon l'environnement ─────────
-      - name: Create .env on VM
+      - name: Create .env on runner and copy to VM
+        env:
+          ENV: ${{ steps.env.outputs.env }}
         run: |
-          if [ "${{ steps.determine-env.outputs.env }}" = "production" ]; then
-            ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "cat > ~/app/.env << 'EOF'
-          WORDPRESS_DB_USER=${{ secrets.PROD_DB_USER }}
-          WORDPRESS_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
-          WORDPRESS_DB_NAME=${{ secrets.PROD_DB_NAME }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.PROD_MYSQL_ROOT_PASSWORD }}
-          WORDPRESS_TABLE_PREFIX=wp_
-          EOF"
+          if [ "$ENV" = "production" ]; then
+            MYSQL_ROOT="${{ secrets.PROD_MYSQL_ROOT_PASSWORD }}"
+            DB_USER="${{ secrets.PROD_DB_USER }}"
+            DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}"
+            DB_NAME="${{ secrets.PROD_DB_NAME }}"
           else
-            ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "cat > ~/app/.env << 'EOF'
-          WORDPRESS_DB_USER=${{ secrets.TEST_DB_USER }}
-          WORDPRESS_DB_PASSWORD=${{ secrets.TEST_DB_PASSWORD }}
-          WORDPRESS_DB_NAME=${{ secrets.TEST_DB_NAME }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.TEST_MYSQL_ROOT_PASSWORD }}
-          WORDPRESS_TABLE_PREFIX=wp_
-          EOF"
+            MYSQL_ROOT="${{ secrets.TEST_MYSQL_ROOT_PASSWORD }}"
+            DB_USER="${{ secrets.TEST_DB_USER }}"
+            DB_PASSWORD="${{ secrets.TEST_DB_PASSWORD }}"
+            DB_NAME="${{ secrets.TEST_DB_NAME }}"
           fi
+          # Valeurs par défaut si les secrets ne sont pas encore configurés
+          MYSQL_ROOT="${MYSQL_ROOT:-protech-root-change-me}"
+          DB_USER="${DB_USER:-wordpress}"
+          DB_PASSWORD="${DB_PASSWORD:-protech-wp-change-me}"
+          DB_NAME="${DB_NAME:-wordpress}"
 
-      # ─── Copier les fichiers du projet sur la VM ────────────────
+          {
+            echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT}"
+            echo "WORDPRESS_DB_USER=${DB_USER}"
+            echo "WORDPRESS_DB_PASSWORD=${DB_PASSWORD}"
+            echo "WORDPRESS_DB_NAME=${DB_NAME}"
+            echo "WORDPRESS_TABLE_PREFIX=wp_"
+          } > /tmp/deploy.env
+
+          scp -o StrictHostKeyChecking=accept-new /tmp/deploy.env "$AZURE_USERNAME@$AZURE_HOST:~/app/.env"
+          echo "✅ .env copié sur la VM ($ENV)"
+
+      - name: Create directories on VM
+        run: |
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes"
+
       - name: Copy project files to VM
+        env:
+          ENV: ${{ steps.env.outputs.env }}
+          REMOTE: ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}
         run: |
-          ENV=${{ steps.determine-env.outputs.env }}
-          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/app"
+          scp -o StrictHostKeyChecking=accept-new docker-compose.yml "$REMOTE:~/app/docker-compose.yml"
+          scp -o StrictHostKeyChecking=accept-new "docker-compose.${ENV}.yml" "$REMOTE:~/app/docker-compose.${ENV}.yml"
+          scp -o StrictHostKeyChecking=accept-new docker/nginx/wordpress.conf "$REMOTE:~/app/docker/nginx/wordpress.conf"
+          scp -o StrictHostKeyChecking=accept-new -r wp-content/themes/astra-child-protech "$REMOTE:~/app/wp-content/themes/"
+          echo "✅ Fichiers copiés"
 
-          # Créer la structure des dossiers sur la VM
-          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "
-            mkdir -p ${REMOTE_DIR}/docker/nginx
-            mkdir -p ${REMOTE_DIR}/wp-content/themes/astra-child-protech
-          "
+      - name: Deploy stack on VM
+        env:
+          ENV: ${{ steps.env.outputs.env }}
+        run: |
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "set -e
+            cd ~/app
+            echo '📦 Pull des images...'
+            docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml pull --quiet
+            echo '🚀 Démarrage des containers...'
+            docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml up -d --remove-orphans
+            docker image prune -f
+            echo '✅ Stack ${ENV} déployée'
+            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 
-          # Copier docker-compose.yml
-          scp docker-compose.yml \
-            ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker-compose.yml
-
-          # Copier l'override d'environnement si présent
-          if [ -f "docker-compose.${ENV}.yml" ]; then
-            scp docker-compose.${ENV}.yml \
-              ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker-compose.${ENV}.yml
+      - name: Health check
+        env:
+          ENV: ${{ steps.env.outputs.env }}
+        run: |
+          if [ "$ENV" = "test" ]; then
+            URL="http://$AZURE_HOST:8080"
+          else
+            URL="http://$AZURE_HOST"
+          fi
+          echo "⏳ Attente démarrage (25s)..."
+          sleep 25
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "$URL" || echo "000")
+          echo "HTTP $URL → $STATUS"
+          if [[ "$STATUS" =~ ^(200|301|302)$ ]]; then
+            echo "✅ Site accessible"
+          else
+            echo "⚠️ Réponse $STATUS (vérifier le site ou le 1er déploiement)"
           fi
 
-          # Copier la config Nginx
-          scp docker/nginx/wordpress.conf \
-            ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker/nginx/wordpress.conf
-
-          # Copier le thème enfant
-          scp -r wp-content/themes/astra-child-protech \
-            ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/wp-content/themes/
-
-      # ─── Déployer sur la VM ─────────────────────────────────────
-      - name: Deploy stack on VM
-        run: |
-          ENV=${{ steps.determine-env.outputs.env }}
-          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/app"
-
-          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "
-            cd ${REMOTE_DIR}
-
-            # Puller les nouvelles images officielles
-            if [ -f docker-compose.${ENV}.yml ]; then
-              docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml pull
-              docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml up -d --remove-orphans
-            else
-              docker compose pull
-              docker compose up -d --remove-orphans
-            fi
-
-            # Nettoyage des images inutilisées
-            docker image prune -f
-
-            echo '✅ Stack ${ENV} déployée'
-            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-          "
-
-      # ─── Health check ───────────────────────────────────────────
-      - name: Health check
-        run: |
-          echo "⏳ Attente démarrage des containers (20s)..."
-          sleep 20
-          curl -f -s -o /dev/null -w "%{http_code}" http://${{ env.AZURE_HOST }} | grep -q "200\|301\|302" \
-            && echo "✅ Site accessible" \
-            || echo "⚠️  Site pas encore accessible (normal au 1er déploiement)"
-
-      # ─── Notification ───────────────────────────────────────────
       - name: Notify
         run: |
-          echo "✅ Deployed [${{ steps.determine-env.outputs.env }}] on ${{ env.AZURE_HOST }}"
-          echo "🌐 http://${{ env.AZURE_HOST }}"
+          ENV="${{ steps.env.outputs.env }}"
+          if [ "$ENV" = "test" ]; then
+            echo "✅ [TEST] déployé → http://$AZURE_HOST:8080"
+          else
+            echo "✅ [PRODUCTION] déployé → http://$AZURE_HOST"
+          fi

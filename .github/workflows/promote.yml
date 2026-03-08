@@ -1,26 +1,22 @@
+# Promote to production — Déploiement manuel en production
+# À lancer après validation sur l'environnement TEST (branch develop).
+# Utilise les mêmes secrets que ci-cd (AZURE_*, optionnellement PROD_* pour la base).
+
 name: Promote to production (manual)
 
 on:
   workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Image tag to deploy (required)'
-        required: true
-      skip_copy:
-        description: 'If true, do not copy compose files (default false)'
-        required: false
-        default: 'false'
 
 jobs:
-  promote:
+  deploy-production:
+    name: Deploy to production
     runs-on: ubuntu-latest
     env:
       AZURE_HOST: ${{ secrets.AZURE_HOST }}
       AZURE_KEY: ${{ secrets.AZURE_KEY }}
       AZURE_USERNAME: ${{ secrets.AZURE_USERNAME }}
-      DOCKERHUB_REGISTRY: ${{ secrets.DOCKERHUB_REGISTRY }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      ENV: production
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,32 +24,68 @@ jobs:
       - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ env.AZURE_KEY }}" > ~/.ssh/id_rsa
+          printf '%s' "$AZURE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.AZURE_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$AZURE_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Copy compose files and deploy script to VM
-        if: ${{ inputs.skip_copy == 'false' }}
+      - name: Create .env (production) and copy to VM
         run: |
-          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/deploy"
-          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "mkdir -p ${REMOTE_DIR}"
-          scp docker-compose.yml ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker-compose.yml
-          if [ -f "docker-compose.production.yml" ]; then
-            scp docker-compose.production.yml ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/
+          MYSQL_ROOT="${{ secrets.PROD_MYSQL_ROOT_PASSWORD }}"
+          DB_USER="${{ secrets.PROD_DB_USER }}"
+          DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}"
+          DB_NAME="${{ secrets.PROD_DB_NAME }}"
+          MYSQL_ROOT="${MYSQL_ROOT:-protech-root-change-me}"
+          DB_USER="${DB_USER:-wordpress}"
+          DB_PASSWORD="${DB_PASSWORD:-protech-wp-change-me}"
+          DB_NAME="${DB_NAME:-wordpress}"
+
+          {
+            echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT}"
+            echo "WORDPRESS_DB_USER=${DB_USER}"
+            echo "WORDPRESS_DB_PASSWORD=${DB_PASSWORD}"
+            echo "WORDPRESS_DB_NAME=${DB_NAME}"
+            echo "WORDPRESS_TABLE_PREFIX=wp_"
+          } > /tmp/deploy.env
+
+          scp -o StrictHostKeyChecking=accept-new /tmp/deploy.env "$AZURE_USERNAME@$AZURE_HOST:~/app/.env"
+          echo "✅ .env production copié sur la VM"
+
+      - name: Create directories on VM
+        run: |
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "mkdir -p ~/app/docker/nginx ~/app/wp-content/themes"
+
+      - name: Copy project files to VM
+        run: |
+          REMOTE="$AZURE_USERNAME@$AZURE_HOST"
+          scp -o StrictHostKeyChecking=accept-new docker-compose.yml "$REMOTE:~/app/docker-compose.yml"
+          scp -o StrictHostKeyChecking=accept-new docker-compose.production.yml "$REMOTE:~/app/docker-compose.production.yml"
+          scp -o StrictHostKeyChecking=accept-new docker/nginx/wordpress.conf "$REMOTE:~/app/docker/nginx/wordpress.conf"
+          scp -o StrictHostKeyChecking=accept-new -r wp-content/themes/astra-child-protech "$REMOTE:~/app/wp-content/themes/"
+          echo "✅ Fichiers copiés"
+
+      - name: Deploy production stack on VM
+        run: |
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "set -e
+            cd ~/app
+            echo '📦 Pull des images...'
+            docker compose -f docker-compose.yml -f docker-compose.production.yml pull --quiet
+            echo '🚀 Démarrage des containers (production)...'
+            docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --remove-orphans
+            docker image prune -f
+            echo '✅ Stack production déployée'
+            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+
+      - name: Health check
+        run: |
+          echo "⏳ Attente démarrage (25s)..."
+          sleep 25
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "http://$AZURE_HOST" || echo "000")
+          echo "HTTP http://$AZURE_HOST → $STATUS"
+          if [[ "$STATUS" =~ ^(200|301|302)$ ]]; then
+            echo "✅ Site production accessible"
+          else
+            echo "⚠️ Réponse $STATUS"
           fi
-          scp scripts/remote-deploy.sh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/remote-deploy.sh
-
-      - name: Execute remote deploy (production)
-        run: |
-          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/deploy"
-          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "chmod +x ${REMOTE_DIR}/remote-deploy.sh && cd ${REMOTE_DIR} && \
-            DOCKERHUB_REGISTRY='${{ env.DOCKERHUB_REGISTRY }}' \
-            DOCKERHUB_USERNAME='${{ env.DOCKERHUB_USERNAME }}' \
-            DOCKERHUB_PASSWORD='${{ env.DOCKERHUB_PASSWORD }}' \
-            IMAGE_NAME='${{ github.event.repository.name }}' \
-            IMAGE_TAG='${{ inputs.image_tag }}' \
-            ENVIRONMENT='production' \
-            ./remote-deploy.sh"
 
       - name: Done
-        run: echo "Promoted image ${{ inputs.image_tag }} to production"
+        run: echo "✅ Promotion en production terminée → http://$AZURE_HOST"

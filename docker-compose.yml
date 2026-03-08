@@ -1,137 +1,98 @@
-name: CI/CD — Docker Compose to Azure VM
+# proTech Solaire – Stack WordPress (Traefik, Nginx, PHP-FPM, MariaDB, Redis)
+# Utilisé en local et déployé sur la VM Azure via GitHub Actions.
 
-on:
-  push:
-    branches:
-      - main
-      - develop
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Optional environment override: test or production'
-        required: false
-        default: ''
+services:
+  traefik:
+    image: traefik:v3
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
 
-jobs:
-  deploy:
-    name: Deploy to Azure VM
-    runs-on: ubuntu-latest
-    env:
-      AZURE_HOST: ${{ secrets.AZURE_HOST }}
-      AZURE_KEY: ${{ secrets.AZURE_KEY }}
-      AZURE_USERNAME: ${{ secrets.AZURE_USERNAME }}
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+    volumes:
+      - ./docker/nginx/wordpress.conf:/etc/nginx/conf.d/default.conf:ro
+      - wordpress_data:/var/www/html
+      - ./wp-content/themes/astra-child-protech:/var/www/html/wp-content/themes/astra-child-protech:ro
+    environment:
+      - NGINX_HOST=_
+      - NGINX_PORT=80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=PathPrefix(`/`)"
+      - "traefik.http.services.nginx.loadbalancer.server.port=80"
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  wordpress:
+    image: wordpress:6.7-php8.3-fpm-alpine
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+      - redis
+    env_file: .env
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+      WP_REDIS_HOST: redis
+      WP_REDIS_PORT: "6379"
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./wp-content/themes/astra-child-protech:/var/www/html/wp-content/themes/astra-child-protech:ro
+    networks:
+      - default
 
-      # ─── Déterminer l'environnement (test ou production) ───────
-      - name: Determine environment
-        id: determine-env
-        run: |
-          if [ "${{ github.event.inputs.environment }}" != "" ]; then
-            echo "env=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            echo "env=production" >> $GITHUB_OUTPUT
-          else
-            echo "env=test" >> $GITHUB_OUTPUT
-          fi
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: ${WORDPRESS_DB_NAME:-wordpress}
+      MYSQL_USER: ${WORDPRESS_DB_USER:-wordpress}
+      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - default
 
-      # ─── Préparer la clé SSH ────────────────────────────────────
-      - name: Prepare SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ env.AZURE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.AZURE_HOST }} >> ~/.ssh/known_hosts
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - default
 
-      # ─── Créer le .env sur la VM selon l'environnement ─────────
-      - name: Create .env on VM
-        run: |
-          if [ "${{ steps.determine-env.outputs.env }}" = "production" ]; then
-            ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "cat > ~/app/.env << 'EOF'
-          WORDPRESS_DB_USER=${{ secrets.PROD_DB_USER }}
-          WORDPRESS_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
-          WORDPRESS_DB_NAME=${{ secrets.PROD_DB_NAME }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.PROD_MYSQL_ROOT_PASSWORD }}
-          WORDPRESS_TABLE_PREFIX=wp_
-          EOF"
-          else
-            ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "cat > ~/app/.env << 'EOF'
-          WORDPRESS_DB_USER=${{ secrets.TEST_DB_USER }}
-          WORDPRESS_DB_PASSWORD=${{ secrets.TEST_DB_PASSWORD }}
-          WORDPRESS_DB_NAME=${{ secrets.TEST_DB_NAME }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.TEST_MYSQL_ROOT_PASSWORD }}
-          WORDPRESS_TABLE_PREFIX=wp_
-          EOF"
-          fi
+  wp-cli:
+    image: wordpress:cli-php8.3
+    profiles:
+      - tools
+    env_file: .env
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./wp-content/themes/astra-child-protech:/var/www/html/wp-content/themes/astra-child-protech
+    depends_on:
+      - mariadb
+    user: "33:33"
+    command: tail -f /dev/null
+    networks:
+      - default
 
-      # ─── Copier les fichiers du projet sur la VM ────────────────
-      - name: Copy project files to VM
-        run: |
-          ENV=${{ steps.determine-env.outputs.env }}
-          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/app"
+networks:
+  default:
+    driver: bridge
 
-          # Créer la structure des dossiers sur la VM
-          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "
-            mkdir -p ${REMOTE_DIR}/docker/nginx
-            mkdir -p ${REMOTE_DIR}/wp-content/themes/astra-child-protech
-          "
-
-          # Copier docker-compose.yml
-          scp docker-compose.yml \
-            ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker-compose.yml
-
-          # Copier l'override d'environnement si présent
-          if [ -f "docker-compose.${ENV}.yml" ]; then
-            scp docker-compose.${ENV}.yml \
-              ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker-compose.${ENV}.yml
-          fi
-
-          # Copier la config Nginx
-          scp docker/nginx/wordpress.conf \
-            ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/docker/nginx/wordpress.conf
-
-          # Copier le thème enfant
-          scp -r wp-content/themes/astra-child-protech \
-            ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }}:${REMOTE_DIR}/wp-content/themes/
-
-      # ─── Déployer sur la VM ─────────────────────────────────────
-      - name: Deploy stack on VM
-        run: |
-          ENV=${{ steps.determine-env.outputs.env }}
-          REMOTE_DIR="/home/${{ env.AZURE_USERNAME }}/app"
-
-          ssh ${{ env.AZURE_USERNAME }}@${{ env.AZURE_HOST }} "
-            cd ${REMOTE_DIR}
-
-            # Puller les nouvelles images officielles
-            if [ -f docker-compose.${ENV}.yml ]; then
-              docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml pull
-              docker compose -f docker-compose.yml -f docker-compose.${ENV}.yml up -d --remove-orphans
-            else
-              docker compose pull
-              docker compose up -d --remove-orphans
-            fi
-
-            # Nettoyage des images inutilisées
-            docker image prune -f
-
-            echo '✅ Stack ${ENV} déployée'
-            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-          "
-
-      # ─── Health check ───────────────────────────────────────────
-      - name: Health check
-        run: |
-          echo "⏳ Attente démarrage des containers (20s)..."
-          sleep 20
-          curl -f -s -o /dev/null -w "%{http_code}" http://${{ env.AZURE_HOST }} | grep -q "200\|301\|302" \
-            && echo "✅ Site accessible" \
-            || echo "⚠️  Site pas encore accessible (normal au 1er déploiement)"
-
-      # ─── Notification ───────────────────────────────────────────
-      - name: Notify
-        run: |
-          echo "✅ Deployed [${{ steps.determine-env.outputs.env }}] on ${{ env.AZURE_HOST }}"
-          echo "🌐 http://${{ env.AZURE_HOST }}"
+volumes:
+  wordpress_data:
+  wordpress_uploads:
+  mariadb_data:
