@@ -63,17 +63,35 @@ jobs:
           scp -o StrictHostKeyChecking=accept-new -r wp-content/themes/astra-child-protech "$REMOTE:~/app/wp-content/themes/"
           echo "✅ Fichiers copiés"
 
+      - name: Ensure Docker is running on VM
+        run: |
+          ssh "$AZURE_USERNAME@$AZURE_HOST" "set -e
+            if command -v docker >/dev/null 2>&1; then
+              sudo systemctl start docker 2>/dev/null || true
+              sudo systemctl enable docker 2>/dev/null || true
+              sleep 2
+              sudo docker info >/dev/null 2>&1 && echo '✅ Docker est prêt' || echo '⚠️ Docker installé mais service peut-être indisponible'
+            else
+              echo '❌ Docker n'\''est pas installé sur la VM.'
+              exit 1
+            fi"
+
       - name: Deploy production stack on VM
         run: |
           ssh "$AZURE_USERNAME@$AZURE_HOST" "set -e
             cd ~/app
+            if sudo docker compose version >/dev/null 2>&1; then
+              COMPOSE='sudo docker compose'
+            else
+              COMPOSE='sudo docker-compose'
+            fi
             echo '📦 Pull des images...'
-            docker compose -f docker-compose.yml -f docker-compose.production.yml pull --quiet
+            \$COMPOSE -f docker-compose.yml -f docker-compose.production.yml pull --quiet
             echo '🚀 Démarrage des containers (production)...'
-            docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --remove-orphans
-            docker image prune -f
+            \$COMPOSE -f docker-compose.yml -f docker-compose.production.yml up -d --remove-orphans
+            sudo docker image prune -f
             echo '✅ Stack production déployée'
-            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+            sudo docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 
       - name: Health check
         run: |
