@@ -142,7 +142,12 @@ jobs:
             echo '📝 Injection du contenu (content-pages → WordPress)...'
             \$RUN_WP wp eval-file /app/scripts/update-pages-content.php --allow-root
 
-            echo '✅ Site conçu déployé'
+            echo '🔗 Mise à jour des URLs du site (pour que le CSS/JS se chargent correctement)...'
+            \$RUN_WP wp option update home \"$SITE_URL\" --allow-root
+            \$RUN_WP wp option update siteurl \"$SITE_URL\" --allow-root
+            \$RUN_WP wp cache flush --allow-root 2>/dev/null || true
+
+            echo '✅ Site conçu déployé (thème + contenu + URLs)'
           "
 
       - name: Health check
