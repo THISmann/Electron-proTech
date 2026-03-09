@@ -18,7 +18,7 @@ cd backend && npm install && npm run dev
 # Frontend (autre terminal)
 cd frontend && npm install && npm run dev
 
-£ hello 
+
 ```
 
 - Frontend : http://localhost:5173
