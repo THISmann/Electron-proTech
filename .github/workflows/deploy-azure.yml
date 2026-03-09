@@ -1,7 +1,7 @@
 # Deploy protech_v2 to Azure VM via SSH
-# Requires: repo cloned on VM, Docker + Docker Compose installed on VM
 # Secrets: AZURE_HOST, AZURE_USERNAME, AZURE_KEY (SSH private key)
 # Optional: AZURE_DEPLOY_PATH, AZURE_VM_SSH_PORT, AZURE_DEPLOY_BRANCH
+# If deploy path does not exist, the workflow clones the repo automatically.
 
 name: Deploy to Azure VM
 
@@ -19,18 +19,29 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
-          DEPLOY_PATH: ${{ secrets.AZURE_DEPLOY_PATH || '/home/azure/protech_v2' }}
-          BRANCH: ${{ secrets.AZURE_DEPLOY_BRANCH || 'main' }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           host: ${{ secrets.AZURE_HOST }}
           username: ${{ secrets.AZURE_USERNAME }}
           key: ${{ secrets.AZURE_KEY }}
           port: ${{ secrets.AZURE_VM_SSH_PORT || 22 }}
-          script_stderr: true
+          envs: GITHUB_REPOSITORY
           script: |
             set -e
             DEPLOY_PATH="${{ secrets.AZURE_DEPLOY_PATH || '$HOME/Electron-proTech/protech_v2' }}"
             BRANCH="${{ secrets.AZURE_DEPLOY_BRANCH || 'main' }}"
+
+            if [ ! -d "$DEPLOY_PATH" ]; then
+              echo "→ Path not found, cloning repository..."
+              REPO_DIR=$(dirname "$DEPLOY_PATH")
+              REPO_NAME=$(basename "$REPO_DIR")
+              PARENT=$(dirname "$REPO_DIR")
+              mkdir -p "$PARENT"
+              cd "$PARENT"
+              git clone --branch "$BRANCH" "https://github.com/${GITHUB_REPOSITORY}.git" "$REPO_NAME"
+              echo "→ Clone done."
+            fi
+
             echo "→ cd $DEPLOY_PATH"
             cd "$DEPLOY_PATH" || { echo "Path not found: $DEPLOY_PATH"; exit 1; }
             echo "→ git pull origin $BRANCH"
