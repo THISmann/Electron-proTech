@@ -1,0 +1,47 @@
+# proTech v2 – Vue 3 + Node API + Admin dashboard
+# Frontend (site public) | Admin (dashboard) | Backend (API)
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    image: protech-v2-frontend:local
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    image: protech-v2-admin:local
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: protech-v2-backend:local
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - backend_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DATA_DIR=/app/data
+
+volumes:
+  backend_data:

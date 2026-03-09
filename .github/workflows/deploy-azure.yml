@@ -1,0 +1,40 @@
+# Deploy protech_v2 to Azure VM via SSH
+# Requires: repo cloned on VM, Docker + Docker Compose installed on VM
+# Secrets: AZURE_VM_HOST, AZURE_VM_USER, AZURE_VM_SSH_PRIVATE_KEY
+# Optional: AZURE_DEPLOY_PATH, AZURE_VM_SSH_PORT, AZURE_DEPLOY_BRANCH
+
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'protech_v2/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEPLOY_PATH: ${{ secrets.AZURE_DEPLOY_PATH || '/home/azure/protech_v2' }}
+          BRANCH: ${{ secrets.AZURE_DEPLOY_BRANCH || 'main' }}
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_VM_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.AZURE_VM_SSH_PORT || 22 }}
+          script_stderr: true
+          script: |
+            set -e
+            DEPLOY_PATH="${{ secrets.AZURE_DEPLOY_PATH || '/home/azure/protech_v2' }}"
+            BRANCH="${{ secrets.AZURE_DEPLOY_BRANCH || 'main' }}"
+            echo "→ cd $DEPLOY_PATH"
+            cd "$DEPLOY_PATH" || { echo "Path not found: $DEPLOY_PATH"; exit 1; }
+            echo "→ git pull origin $BRANCH"
+            git pull origin "$BRANCH"
+            echo "→ docker compose up -d --build"
+            docker compose up -d --build
+            echo "→ done"

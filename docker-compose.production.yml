@@ -1,8 +1,0 @@
-# Override pour l'environnement PRODUCTION (déploiement depuis main ou workflow "Promote").
-# Le site est exposé sur le port 80.
-
-services:
-  traefik:
-    ports:
-      - "80:80"
-      - "8080:8080"
