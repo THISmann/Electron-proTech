@@ -2,11 +2,9 @@ services:
   traefik:
     image: traefik:v2.10
     restart: unless-stopped
-    environment:
-      - DOCKER_API_VERSION=1.41
     command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+      - --providers.file.watch=true
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
@@ -19,7 +17,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - traefik_letsencrypt:/letsencrypt
 
   frontend:
@@ -33,14 +31,6 @@ services:
     depends_on:
       - backend
       - traefik
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls=true
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
-      - traefik.http.routers.frontend.priority=1
-      - traefik.http.services.frontend.loadbalancer.server.port=80
 
   admin:
     build:
@@ -53,16 +43,6 @@ services:
     depends_on:
       - backend
       - traefik
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.admin.rule=Host(`${DOMAIN}`) && PathPrefix(`/admin`)
-      - traefik.http.routers.admin.entrypoints=websecure
-      - traefik.http.routers.admin.tls=true
-      - traefik.http.routers.admin.tls.certresolver=letsencrypt
-      - traefik.http.routers.admin.priority=100
-      - traefik.http.routers.admin.middlewares=admin-strip
-      - traefik.http.middlewares.admin-strip.stripprefix.prefixes=/admin
-      - traefik.http.services.admin.loadbalancer.server.port=80
 
   backend:
     build:
@@ -78,14 +58,6 @@ services:
       - DATA_DIR=/app/data
     depends_on:
       - traefik
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.backend-api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))
-      - traefik.http.routers.backend-api.entrypoints=websecure
-      - traefik.http.routers.backend-api.tls=true
-      - traefik.http.routers.backend-api.tls.certresolver=letsencrypt
-      - traefik.http.routers.backend-api.priority=110
-      - traefik.http.services.backend-api.loadbalancer.server.port=4000
 
 volumes:
   backend_data:

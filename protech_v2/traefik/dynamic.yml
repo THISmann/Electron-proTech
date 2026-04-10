@@ -1,0 +1,52 @@
+http:
+  routers:
+    frontend:
+      rule: "Host(`dev.electronprotech.com`) && PathPrefix(`/`)"
+      entryPoints:
+        - websecure
+      service: frontend
+      tls:
+        certResolver: letsencrypt
+      priority: 1
+
+    admin:
+      rule: "Host(`dev.electronprotech.com`) && PathPrefix(`/admin`)"
+      entryPoints:
+        - websecure
+      service: admin
+      middlewares:
+        - admin-strip
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+
+    backend:
+      rule: "Host(`dev.electronprotech.com`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))"
+      entryPoints:
+        - websecure
+      service: backend
+      tls:
+        certResolver: letsencrypt
+      priority: 110
+
+  middlewares:
+    admin-strip:
+      stripPrefix:
+        prefixes:
+          - /admin
+
+  services:
+    frontend:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:80"
+
+    admin:
+      loadBalancer:
+        servers:
+          - url: "http://admin:80"
+
+    backend:
+      loadBalancer:
+        servers:
+          - url: "http://backend:4000"

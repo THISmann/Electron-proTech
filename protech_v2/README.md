@@ -62,6 +62,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 Notes:
 - Ports `80` and `443` must be open in EC2 Security Group.
 - TLS certificates are issued automatically via Let's Encrypt.
+- Production routing is handled by Traefik file provider (`traefik/dynamic.yml`) for compatibility with older Docker APIs.
 
 ## API Backend
 
