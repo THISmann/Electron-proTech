@@ -35,6 +35,34 @@ docker compose up -d --build
 - API : http://localhost/api
 - Traefik dashboard : http://localhost:8080
 
+## Production VM (EC2 + Domain)
+
+Use `docker-compose.prod.yml` for HTTPS production behind Traefik.
+
+1. Copy env file and set real values:
+
+```bash
+cp .env.prod.example .env.prod
+```
+
+2. Ensure DNS points to your EC2 public IP (`13.63.210.68`):
+- `dev.electronprotech.com` -> A record -> `13.63.210.68`
+
+3. Start production stack:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+```
+
+4. Verify:
+- Site: `https://dev.electronprotech.com/`
+- Admin: `https://dev.electronprotech.com/admin`
+- API: `https://dev.electronprotech.com/api/health`
+
+Notes:
+- Ports `80` and `443` must be open in EC2 Security Group.
+- TLS certificates are issued automatically via Let's Encrypt.
+
 ## API Backend
 
 - `GET /api/forms` – liste des soumissions de formulaires
