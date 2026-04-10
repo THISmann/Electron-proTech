@@ -1,7 +1,18 @@
-# proTech v2 – Vue 3 + Node API + Admin dashboard
-# Frontend (site public) | Admin (dashboard) | Backend (API)
-
 services:
+  traefik:
+    image: traefik:v3.4
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   frontend:
     build:
       context: ./frontend
@@ -10,10 +21,15 @@ services:
         VITE_API_URL: ""
     image: protech-v2-frontend:local
     restart: unless-stopped
-    ports:
-      - "3000:80"
     depends_on:
       - backend
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=PathPrefix(`/`)
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.routers.frontend.priority=1
+      - traefik.http.services.frontend.loadbalancer.server.port=80
 
   admin:
     build:
@@ -23,10 +39,17 @@ services:
         VITE_API_URL: ""
     image: protech-v2-admin:local
     restart: unless-stopped
-    ports:
-      - "3001:80"
     depends_on:
       - backend
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.admin.rule=PathPrefix(`/admin`)
+      - traefik.http.routers.admin.entrypoints=web
+      - traefik.http.routers.admin.priority=100
+      - traefik.http.routers.admin.middlewares=admin-strip
+      - traefik.http.middlewares.admin-strip.stripprefix.prefixes=/admin
+      - traefik.http.services.admin.loadbalancer.server.port=80
 
   backend:
     build:
@@ -34,14 +57,20 @@ services:
       dockerfile: Dockerfile
     image: protech-v2-backend:local
     restart: unless-stopped
-    ports:
-      - "4000:4000"
     volumes:
       - backend_data:/app/data
     environment:
       - NODE_ENV=production
       - PORT=4000
       - DATA_DIR=/app/data
+    depends_on:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend-api.rule=PathPrefix(`/api`) || PathPrefix(`/socket.io`)
+      - traefik.http.routers.backend-api.entrypoints=web
+      - traefik.http.routers.backend-api.priority=110
+      - traefik.http.services.backend-api.loadbalancer.server.port=4000
 
 volumes:
   backend_data:

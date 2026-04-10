@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getForms, getBlog, createArticle, updateArticle, deleteArticle } from './api'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { io, type Socket } from 'socket.io-client'
+import { getForms, getBlog, createArticle, updateArticle, deleteArticle, updateFormStatus, type FormStatus } from './api'
 
 interface FormEntry {
   id: string
+  ticketId: string
   nom: string
   societe: string
   email: string
@@ -11,6 +13,7 @@ interface FormEntry {
   ville: string
   sujet: string
   message: string
+  status: FormStatus
   createdAt: string
 }
 
@@ -34,6 +37,23 @@ const loadingForms = ref(false)
 const loadingBlog = ref(false)
 const error = ref('')
 const sidebarOpen = ref(true)
+let formsSocket: Socket | null = null
+const selectedForm = ref<FormEntry | null>(null)
+const updatingStatusId = ref<string | null>(null)
+const statusFilter = ref<'all' | FormStatus>('all')
+const statusSort = ref<'none' | 'status_asc' | 'status_desc'>('none')
+const searchInput = ref('')
+const appliedSearch = ref('')
+const statusOptions: { value: FormStatus; label: string }[] = [
+  { value: 'en_attente', label: 'En attente' },
+  { value: 'en_cours', label: 'En cours' },
+  { value: 'traitee', label: 'Traitee' },
+]
+const statusOrder: Record<FormStatus, number> = {
+  en_attente: 1,
+  en_cours: 2,
+  traitee: 3,
+}
 
 const activeOption = ref<SidebarOption>('dashboard')
 
@@ -66,6 +86,116 @@ async function loadForms() {
     loadingForms.value = false
   }
 }
+
+function prependForm(entry: FormEntry) {
+  if (forms.value.some((form) => form.id === entry.id)) return
+  forms.value = [entry, ...forms.value]
+}
+
+function upsertForm(entry: FormEntry) {
+  const index = forms.value.findIndex((form) => form.id === entry.id)
+  if (index === -1) {
+    prependForm(entry)
+    return
+  }
+  const next = [...forms.value]
+  next[index] = entry
+  forms.value = next
+  if (selectedForm.value?.id === entry.id) selectedForm.value = entry
+}
+
+function statusLabel(status: FormStatus) {
+  return statusOptions.find((option) => option.value === status)?.label ?? status
+}
+
+function statusBadgeClass(status: FormStatus) {
+  if (status === 'traitee') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'en_cours') return 'bg-amber-100 text-amber-700'
+  return 'bg-slate-100 text-slate-700'
+}
+
+function statusRowClass(status: FormStatus) {
+  if (status === 'traitee') return 'bg-emerald-50/45 hover:bg-emerald-50'
+  if (status === 'en_cours') return 'bg-amber-50/45 hover:bg-amber-50'
+  return 'bg-slate-50/45 hover:bg-slate-50'
+}
+
+function openFormDetails(entry: FormEntry) {
+  selectedForm.value = entry
+}
+
+function closeFormDetails() {
+  selectedForm.value = null
+}
+
+async function changeFormStatus(entry: FormEntry, status: FormStatus) {
+  if (entry.status === status) return
+  error.value = ''
+  updatingStatusId.value = entry.id
+  try {
+    const updated = await updateFormStatus(entry.id, status)
+    upsertForm(updated)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Erreur'
+  } finally {
+    updatingStatusId.value = null
+  }
+}
+
+function applySearch() {
+  appliedSearch.value = searchInput.value.trim().toLowerCase()
+}
+
+function resetFilters() {
+  statusFilter.value = 'all'
+  statusSort.value = 'none'
+  searchInput.value = ''
+  appliedSearch.value = ''
+}
+
+const displayedForms = computed(() => {
+  let items = [...forms.value]
+
+  if (statusFilter.value !== 'all') {
+    items = items.filter((form) => form.status === statusFilter.value)
+  }
+
+  if (appliedSearch.value) {
+    items = items.filter((form) => {
+      const haystack = [
+        form.ticketId,
+        form.nom,
+        form.societe,
+        form.email,
+        form.telephone,
+        form.ville,
+        form.sujet,
+        form.message,
+      ]
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(appliedSearch.value)
+    })
+  }
+
+  if (statusSort.value === 'status_asc') {
+    items.sort((a, b) => {
+      const statusDiff = statusOrder[a.status] - statusOrder[b.status]
+      if (statusDiff !== 0) return statusDiff
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  } else if (statusSort.value === 'status_desc') {
+    items.sort((a, b) => {
+      const statusDiff = statusOrder[b.status] - statusOrder[a.status]
+      if (statusDiff !== 0) return statusDiff
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  } else {
+    items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }
+
+  return items
+})
 
 async function loadBlog() {
   loadingBlog.value = true
@@ -161,6 +291,19 @@ async function submitNewArticle() {
 onMounted(() => {
   loadForms()
   loadBlog()
+  const socketUrl = import.meta.env.VITE_API_URL || window.location.origin
+  formsSocket = io(socketUrl, { transports: ['websocket', 'polling'] })
+  formsSocket.on('form:created', (entry: FormEntry) => {
+    prependForm(entry)
+  })
+  formsSocket.on('form:updated', (entry: FormEntry) => {
+    upsertForm(entry)
+  })
+})
+
+onUnmounted(() => {
+  formsSocket?.disconnect()
+  formsSocket = null
 })
 </script>
 
@@ -260,12 +403,44 @@ onMounted(() => {
             <h2 class="text-lg font-bold text-protech-black">Demandes reçues (contact / audit)</h2>
             <button type="button" class="text-sm px-3 py-1.5 rounded-lg bg-protech-green text-white hover:bg-protech-green-light" @click="loadForms">Actualiser</button>
           </div>
+          <div class="px-6 py-4 border-b border-slate-100 grid gap-3 md:grid-cols-4">
+            <select v-model="statusFilter" class="px-3 py-2 rounded-lg border border-slate-200 text-sm">
+              <option value="all">Filtre statut: Tous</option>
+              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+                Filtre statut: {{ option.label }}
+              </option>
+            </select>
+
+            <select v-model="statusSort" class="px-3 py-2 rounded-lg border border-slate-200 text-sm">
+              <option value="none">Tri: Plus recent</option>
+              <option value="status_asc">Tri statut: En attente -> Traitee</option>
+              <option value="status_desc">Tri statut: Traitee -> En attente</option>
+            </select>
+
+            <input
+              v-model="searchInput"
+              type="text"
+              placeholder="ID, nom, email, sujet..."
+              class="px-3 py-2 rounded-lg border border-slate-200 text-sm md:col-span-1"
+              @keyup.enter="applySearch"
+            />
+
+            <div class="flex gap-2">
+              <button type="button" class="px-3 py-2 rounded-lg bg-protech-black text-white text-sm hover:bg-black/90" @click="applySearch">
+                Rechercher
+              </button>
+              <button type="button" class="px-3 py-2 rounded-lg border border-slate-300 text-sm hover:bg-slate-50" @click="resetFilters">
+                Reinitialiser
+              </button>
+            </div>
+          </div>
           <div v-if="loadingForms" class="p-12 text-center text-slate-500">Chargement…</div>
-          <div v-else-if="forms.length === 0" class="p-12 text-center text-slate-500">Aucune demande pour le moment.</div>
+          <div v-else-if="displayedForms.length === 0" class="p-12 text-center text-slate-500">Aucun resultat pour ce filtre.</div>
           <div v-else class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead class="bg-slate-50 text-slate-600">
                 <tr>
+                  <th class="px-4 py-3 font-semibold">ID</th>
                   <th class="px-4 py-3 font-semibold">Date</th>
                   <th class="px-4 py-3 font-semibold">Nom</th>
                   <th class="px-4 py-3 font-semibold">Société</th>
@@ -273,11 +448,18 @@ onMounted(() => {
                   <th class="px-4 py-3 font-semibold">Tél</th>
                   <th class="px-4 py-3 font-semibold">Ville</th>
                   <th class="px-4 py-3 font-semibold">Sujet</th>
-                  <th class="px-4 py-3 font-semibold">Message</th>
+                  <th class="px-4 py-3 font-semibold">Statut</th>
+                  <th class="px-4 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="f in forms" :key="f.id" class="border-t border-slate-100 hover:bg-slate-50/50">
+                <tr
+                  v-for="f in displayedForms"
+                  :key="f.id"
+                  class="border-t border-slate-100 transition-colors"
+                  :class="statusRowClass(f.status)"
+                >
+                  <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-slate-700">{{ f.ticketId }}</td>
                   <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(f.createdAt) }}</td>
                   <td class="px-4 py-3">{{ f.nom }}</td>
                   <td class="px-4 py-3">{{ f.societe }}</td>
@@ -285,7 +467,25 @@ onMounted(() => {
                   <td class="px-4 py-3">{{ f.telephone }}</td>
                   <td class="px-4 py-3">{{ f.ville }}</td>
                   <td class="px-4 py-3">{{ f.sujet }}</td>
-                  <td class="px-4 py-3 max-w-xs truncate" :title="f.message">{{ f.message }}</td>
+                  <td class="px-4 py-3">
+                    <select
+                      class="px-2 py-1 rounded-lg border border-slate-200 bg-white text-xs"
+                      :value="f.status"
+                      :disabled="updatingStatusId === f.id"
+                      @change="changeFormStatus(f, ($event.target as HTMLSelectElement).value as FormStatus)"
+                    >
+                      <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                    </select>
+                  </td>
+                  <td class="px-4 py-3">
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs hover:bg-slate-50"
+                      @click="openFormDetails(f)"
+                    >
+                      Voir details
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -334,6 +534,33 @@ onMounted(() => {
           </div>
         </section>
       </main>
+    </div>
+
+    <!-- Modal details formulaire -->
+    <div v-if="selectedForm" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" @click.self="closeFormDetails">
+      <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+          <h2 class="text-lg font-bold">Details de la demande</h2>
+          <button type="button" class="p-2 rounded-lg hover:bg-slate-100" @click="closeFormDetails">✕</button>
+        </div>
+        <div class="p-6 grid sm:grid-cols-2 gap-4 text-sm">
+          <div><span class="text-slate-500">ID demande</span><p class="font-mono">{{ selectedForm.ticketId }}</p></div>
+          <div><span class="text-slate-500">Date</span><p>{{ formatDate(selectedForm.createdAt) }}</p></div>
+          <div><span class="text-slate-500">Nom</span><p>{{ selectedForm.nom }}</p></div>
+          <div><span class="text-slate-500">Societe</span><p>{{ selectedForm.societe || '-' }}</p></div>
+          <div><span class="text-slate-500">Email</span><p>{{ selectedForm.email }}</p></div>
+          <div><span class="text-slate-500">Telephone</span><p>{{ selectedForm.telephone || '-' }}</p></div>
+          <div><span class="text-slate-500">Ville</span><p>{{ selectedForm.ville || '-' }}</p></div>
+          <div><span class="text-slate-500">Sujet</span><p>{{ selectedForm.sujet }}</p></div>
+          <div class="sm:col-span-2"><span class="text-slate-500">Message</span><p class="mt-1 whitespace-pre-wrap bg-slate-50 rounded-lg p-3">{{ selectedForm.message || 'Aucun message' }}</p></div>
+          <div class="sm:col-span-2 flex items-center gap-3 pt-2">
+            <span class="text-slate-500">Statut</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold" :class="statusBadgeClass(selectedForm.status)">
+              {{ statusLabel(selectedForm.status) }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal nouvel article -->

@@ -21,6 +21,7 @@ const currentYear = new Date().getFullYear()
             <li><router-link to="/simulateur" class="text-slate-400 hover:text-protech-gold text-sm transition-colors">Simulateur</router-link></li>
             <li><router-link to="/references" class="text-slate-400 hover:text-protech-gold text-sm transition-colors">Références</router-link></li>
             <li><router-link to="/maintenance-sav" class="text-slate-400 hover:text-protech-gold text-sm transition-colors">Maintenance SAV</router-link></li>
+            <li><router-link to="/formation" class="text-slate-400 hover:text-protech-gold text-sm transition-colors">Formation</router-link></li>
             <li><router-link to="/blog" class="text-slate-400 hover:text-protech-gold text-sm transition-colors">Blog</router-link></li>
             <li><router-link to="/contact" class="text-slate-400 hover:text-protech-gold text-sm transition-colors">Contact</router-link></li>
           </ul>

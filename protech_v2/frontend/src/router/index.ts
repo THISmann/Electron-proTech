@@ -9,6 +9,7 @@ const router = createRouter({
     { path: '/simulateur', name: 'Simulateur', component: () => import('../views/SimulateurView.vue'), meta: { title: 'Simulateur' } },
     { path: '/references', name: 'References', component: () => import('../views/ReferencesView.vue'), meta: { title: 'Références' } },
     { path: '/maintenance-sav', name: 'MaintenanceSav', component: () => import('../views/MaintenanceSavView.vue'), meta: { title: 'Maintenance SAV' } },
+    { path: '/formation', name: 'Formation', component: () => import('../views/FormationView.vue'), meta: { title: 'Formation Energie Solaire' } },
     { path: '/blog', name: 'Blog', component: () => import('../views/BlogView.vue'), meta: { title: 'Blog' } },
     { path: '/blog/:slug', name: 'BlogPost', component: () => import('../views/BlogPostView.vue'), meta: { title: 'Article' } },
     { path: '/contact', name: 'Contact', component: () => import('../views/ContactView.vue'), meta: { title: 'Contact' } },

@@ -24,15 +24,16 @@ cd frontend && npm install && npm run dev
 - Frontend : http://localhost:5173
 - API : http://localhost:4000
 
-## Production (Docker)
+## Production (Docker + Traefik)
 
 ```bash
 docker compose up -d --build
 ```
 
-- Site : http://localhost:3000
-- Admin (dashboard) : http://localhost:3001
-- API : http://localhost:4000
+- Site : http://localhost/
+- Admin (dashboard) : http://localhost/admin
+- API : http://localhost/api
+- Traefik dashboard : http://localhost:8080
 
 ## API Backend
 

@@ -12,6 +12,7 @@ const navLinks = [
   { path: '/simulateur', label: 'Simulateur' },
   { path: '/references', label: 'Références' },
   { path: '/maintenance-sav', label: 'Maintenance SAV' },
+  { path: '/formation', label: 'Formation' },
   { path: '/blog', label: 'Blog' },
   { path: '/contact', label: 'Contact' },
 ]

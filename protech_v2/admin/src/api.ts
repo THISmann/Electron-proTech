@@ -1,8 +1,20 @@
 const baseURL = import.meta.env.VITE_API_URL || ''
 
+export type FormStatus = 'en_attente' | 'en_cours' | 'traitee'
+
 export async function getForms() {
   const r = await fetch(`${baseURL}/api/forms`)
   if (!r.ok) throw new Error('Erreur chargement formulaires')
+  return r.json()
+}
+
+export async function updateFormStatus(id: string, status: FormStatus) {
+  const r = await fetch(`${baseURL}/api/forms/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
+  if (!r.ok) throw new Error((await r.json().catch(() => ({})) as { error?: string }).error || 'Erreur mise a jour statut')
   return r.json()
 }
 
